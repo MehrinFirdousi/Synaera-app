@@ -36,13 +36,8 @@ typealias ServListener = (serv: Byte) -> Unit
 class MainActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityMainBinding
     private lateinit var client : OkHttpClient
-
-    private var imageCapture: ImageCapture? = null
-
-    private var videoCapture: VideoCapture<Recorder>? = null
-
     private lateinit var cameraExecutor: ExecutorService
-    private var url : String = "http://192.168.1.16:80/sendimg"
+    private var url : String = "http://192.168.1.16:80/sendImg"
     private var translationOngoing : Boolean = false
     private var cameraFacing : Int = CameraSelector.LENS_FACING_FRONT
     private var imgNo : Int = 0
@@ -78,14 +73,10 @@ class MainActivity : AppCompatActivity() {
             viewBinding.textView.text = "" // this should run only once the imageanalyzer stops running and the last packets are done sending, right now it doesnt work properly
         }
         viewBinding.flipCameraButton.setOnClickListener {
-            if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
-//                cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+            if (cameraFacing == CameraSelector.LENS_FACING_FRONT)
                 cameraFacing = CameraSelector.LENS_FACING_BACK
-            }
-            else {
-//                cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+            else
                 cameraFacing = CameraSelector.LENS_FACING_FRONT
-            }
             startCamera()
         }
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -113,7 +104,6 @@ class MainActivity : AppCompatActivity() {
                     })
                 }
             // Select back camera as a default
-//            val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
             val cameraSelector: CameraSelector = if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
                 CameraSelector.DEFAULT_FRONT_CAMERA
             } else {

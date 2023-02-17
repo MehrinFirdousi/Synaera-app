@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+   <item
+       android:id="@+id/gallery_menu_id"
+       android:title="Gallery"
+       android:icon="@drawable/ic_launcher_foreground"/>
+   <item
+      android:id="@+id/camera_menu_id"
+      android:title="Camera"
+      android:icon="@drawable/ic_launcher_foreground"/>
+
+   <item
+      android:id="@+id/chat_menu_id"
+      android:title="Chat"
+      android:icon="@drawable/ic_launcher_foreground"/>\
+</menu>
