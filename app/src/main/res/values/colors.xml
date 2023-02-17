@@ -6,7 +6,10 @@
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
+    <color name="trans_black">#7F000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="grey">#FF6e6e6e</color>
+    <color name="lightBlue">#FF81a7db</color>
     <color name="moonstone">#FF58A4B0</color>
 
     <color name="raisinblack">#FF3A2E39</color>

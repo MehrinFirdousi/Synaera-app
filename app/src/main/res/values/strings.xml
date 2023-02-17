@@ -5,4 +5,6 @@
     <string name="stop_capture">Stop Capture</string>
     <string name="flip_camera">Flip Camera</string>
     <string name="open_gallery">Open Gallery</string>
+    <string name="info_button">Info Button</string>
+    <string name="settings">Settings</string>
 </resources>

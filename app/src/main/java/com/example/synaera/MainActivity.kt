@@ -66,9 +66,11 @@ class MainActivity : AppCompatActivity() {
         // Set up the listeners for record, flip camera and open gallery buttons
         viewBinding.startCaptureButton.setOnClickListener {
             if (translationOngoing)
-                viewBinding.startCaptureButton.setText(R.string.start_capture)
+                viewBinding.startCaptureButton.setBackgroundResource(R.drawable.outline_circle_24)
+//                viewBinding.startCaptureButton.setText(R.string.start_capture)
             else
-                viewBinding.startCaptureButton.setText(R.string.stop_capture)
+                viewBinding.startCaptureButton.setBackgroundResource(R.drawable.outline_stop_circle_24)
+//                viewBinding.startCaptureButton.setText(R.string.stop_capture)
             translationOngoing = !translationOngoing
             viewBinding.textView.text = "" // this should run only once the imageanalyzer stops running and the last packets are done sending, right now it doesnt work properly
         }
