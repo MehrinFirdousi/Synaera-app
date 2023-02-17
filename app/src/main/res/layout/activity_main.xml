@@ -5,12 +5,24 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context=".MainActivity">
 
     <androidx.camera.view.PreviewView
         android:id="@+id/viewFinder"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <Button
+        android:id="@+id/open_gallery_button"
+        android:layout_width="110dp"
+        android:layout_height="110dp"
+        android:layout_marginBottom="40dp"
+        android:elevation="2dp"
+        android:text="@string/open_gallery"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/start_capture_button" />
 
     <Button
         android:id="@+id/start_capture_button"
@@ -23,7 +35,19 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-<!--    <Button-->
+    <Button
+        android:id="@+id/flip_camera_button"
+        android:layout_width="110dp"
+        android:layout_height="110dp"
+        android:layout_marginBottom="40dp"
+        android:elevation="2dp"
+        android:text="@string/flip_camera"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/start_capture_button"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+
+    <!--    <Button-->
 <!--        android:id="@+id/video_capture_button"-->
 <!--        android:layout_width="110dp"-->
 <!--        android:layout_height="110dp"-->

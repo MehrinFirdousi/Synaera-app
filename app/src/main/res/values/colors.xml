@@ -7,4 +7,13 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="moonstone">#FF58A4B0</color>
+
+    <color name="raisinblack">#FF3A2E39</color>
+    <color name="midgreen">#FF1E555C</color>
+    <color name="paledogwood">#FFF4D8CD</color>
+    <color name="charcoal">#FF373F51</color>
+    <color name="spacecadet">#FF1B1B3A</color>
+    <color name="feldgrau">#FF466362</color>
+    <color name="melon">#FFDAA49A</color>
 </resources>

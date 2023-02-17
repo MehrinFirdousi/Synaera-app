@@ -44,12 +44,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cameraExecutor: ExecutorService
     private var url : String = "http://192.168.1.16:80/sendimg"
     private var translationOngoing : Boolean = false
+    private var cameraFacing : Int = CameraSelector.LENS_FACING_FRONT
+    private var imgNo : Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
 
+        // Set up HTTP client
         client = OkHttpClient().newBuilder()
             .connectTimeout(10, TimeUnit.SECONDS)
             .readTimeout(10, TimeUnit.SECONDS)
@@ -65,7 +68,7 @@ class MainActivity : AppCompatActivity() {
                 this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
 
-        // Set up the listeners for take photo and video capture buttons
+        // Set up the listeners for record, flip camera and open gallery buttons
         viewBinding.startCaptureButton.setOnClickListener {
             if (translationOngoing)
                 viewBinding.startCaptureButton.setText(R.string.start_capture)
@@ -74,7 +77,17 @@ class MainActivity : AppCompatActivity() {
             translationOngoing = !translationOngoing
             viewBinding.textView.text = "" // this should run only once the imageanalyzer stops running and the last packets are done sending, right now it doesnt work properly
         }
-
+        viewBinding.flipCameraButton.setOnClickListener {
+            if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
+//                cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+                cameraFacing = CameraSelector.LENS_FACING_BACK
+            }
+            else {
+//                cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+                cameraFacing = CameraSelector.LENS_FACING_FRONT
+            }
+            startCamera()
+        }
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
@@ -100,8 +113,12 @@ class MainActivity : AppCompatActivity() {
                     })
                 }
             // Select back camera as a default
-            val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-
+//            val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+            val cameraSelector: CameraSelector = if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
+                CameraSelector.DEFAULT_FRONT_CAMERA
+            } else {
+                CameraSelector.DEFAULT_BACK_CAMERA
+            }
             try {
                 // Unbind use cases before rebinding
                 cameraProvider.unbindAll()
@@ -160,8 +177,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private inner class ServerConnection(private val listener: ServListener) : ImageAnalysis.Analyzer {
-
-        private var imgNo : Int = 0
 
         private fun sendPostRequest(sUrl : String, array : ByteArray) {
 
