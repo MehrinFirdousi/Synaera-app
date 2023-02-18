@@ -16,8 +16,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.video.*
-import androidx.camera.video.VideoCapture
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -43,7 +41,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var client : OkHttpClient
     private lateinit var cameraExecutor: ExecutorService
     private val pickImage = 100
-    private var url : String = "http://192.168.1.16:80/sendImg"
+    private var url : String = "http://10.10.10.30:5000/sendImg"
     private var translationOngoing : Boolean = false
     private var cameraFacing : Int = CameraSelector.LENS_FACING_FRONT
     private var imgNo : Int = 0
@@ -133,7 +131,7 @@ class MainActivity : AppCompatActivity() {
     private fun setViewPagerAdapter() {
         val curitem = viewBinding.viewPager.currentItem
         Log.d(TAG, "current item in viewpager = $curitem")
-        viewBinding.viewPager?.adapter = ViewPagerAdapter(this)
+        viewBinding.viewPager.adapter = ViewPagerAdapter(this)
     }
 
     private fun startCamera() {
