@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var client : OkHttpClient
     private lateinit var cameraExecutor: ExecutorService
     private val pickImage = 100
-    private var url : String = "http://10.10.10.30:5000/sendImg"
+    private var url : String = "http://10.10.10.30:80/sendImg"
     private var translationOngoing : Boolean = false
     private var cameraFacing : Int = CameraSelector.LENS_FACING_FRONT
     private var imgNo : Int = 0
@@ -118,14 +118,43 @@ class MainActivity : AppCompatActivity() {
 
     private fun setBottomNavigation() {
         viewBinding.bottomNavBar.setOnItemSelectedListener {
-            viewBinding.viewPager.currentItem = when(it.itemId) {
-                R.id.gallery_menu_id -> 0
-                R.id.camera_menu_id -> 1
-                R.id.chat_menu_id -> 2
-                else -> 1
+//            viewBinding.viewPager.currentItem = when(it.itemId) {
+//                R.id.gallery_menu_id -> 0
+//                R.id.camera_menu_id -> 1
+//                R.id.chat_menu_id -> 2
+//                else -> 1
+//            }
+            if (it.itemId == R.id.gallery_menu_id) {
+                viewBinding.viewPager.currentItem = 0
+                disableCameraButtons()
             }
+            else if (it.itemId == R.id.camera_menu_id) {
+                viewBinding.viewPager.currentItem = 1
+                enableCameraButtons()
+            }
+            else if (it.itemId == R.id.chat_menu_id) {
+                viewBinding.viewPager.currentItem = 2
+                disableCameraButtons()
+            }
+            else
+                viewBinding.viewPager.currentItem = 1
             return@setOnItemSelectedListener true
         }
+    }
+
+    private fun disableCameraButtons() {
+        viewBinding.openGalleryButton.visibility = View.INVISIBLE;
+        viewBinding.startCaptureButton.visibility = View.INVISIBLE;
+        viewBinding.flipCameraButton.visibility = View.INVISIBLE;
+        viewBinding.infoButton.visibility = View.INVISIBLE;
+        viewBinding.settingsButton.visibility = View.INVISIBLE;
+    }
+    private fun enableCameraButtons() {
+        viewBinding.openGalleryButton.visibility = View.VISIBLE;
+        viewBinding.startCaptureButton.visibility = View.VISIBLE;
+        viewBinding.flipCameraButton.visibility = View.VISIBLE;
+        viewBinding.infoButton.visibility = View.VISIBLE;
+        viewBinding.settingsButton.visibility = View.VISIBLE;
     }
 
     private fun setViewPagerAdapter() {

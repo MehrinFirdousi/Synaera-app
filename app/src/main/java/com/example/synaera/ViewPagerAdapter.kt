@@ -14,7 +14,7 @@ class ViewPagerAdapter(var fa: FragmentActivity) : FragmentStateAdapter(fa) {
         return when(position) {
             0 -> FilesFragment.newInstance()
             2 -> ChatFragment.newInstance()
-            else -> FilesFragment.newInstance()
+            else -> CameraFragment.newInstance()
         }
     }
 
