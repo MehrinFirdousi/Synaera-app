@@ -8,6 +8,7 @@ import android.graphics.*
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
@@ -17,6 +18,7 @@ import androidx.camera.video.VideoCapture
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import androidx.viewpager2.widget.ViewPager2
 import com.example.synaera.databinding.ActivityMainBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -57,20 +59,20 @@ class MainActivity : AppCompatActivity() {
 
         // Request camera permissions
         if (allPermissionsGranted()) {
-            startCamera()
+//            startCamera()
         } else {
             ActivityCompat.requestPermissions(
                 this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
 
-        // Set up the listeners for record, flip camera and open gallery buttons
+
+//         Set up the listeners for record, flip camera and open gallery buttons
         viewBinding.startCaptureButton.setOnClickListener {
             if (translationOngoing)
                 viewBinding.startCaptureButton.setBackgroundResource(R.drawable.outline_circle_24)
-//                viewBinding.startCaptureButton.setText(R.string.start_capture)
             else
                 viewBinding.startCaptureButton.setBackgroundResource(R.drawable.outline_stop_circle_24)
-//                viewBinding.startCaptureButton.setText(R.string.stop_capture)
+
             translationOngoing = !translationOngoing
             viewBinding.textView.text = "" // this should run only once the imageanalyzer stops running and the last packets are done sending, right now it doesnt work properly
         }
@@ -82,6 +84,41 @@ class MainActivity : AppCompatActivity() {
             startCamera()
         }
         cameraExecutor = Executors.newSingleThreadExecutor()
+        setViewPagerAdapter()
+        setBottomNavigation()
+        setViewPagerListener()
+    }
+
+    private fun setViewPagerListener() {
+        viewBinding.viewPager.registerOnPageChangeCallback(object: ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                viewBinding.bottomNavBar.selectedItemId = when(position) {
+                    0 ->  R.id.gallery_menu_id
+                    1 ->  R.id.camera_menu_id
+                    2 ->  R.id.chat_menu_id
+                    else -> R.id.camera_menu_id
+                }
+                super.onPageSelected(position)
+            }
+        })
+    }
+
+    private fun setBottomNavigation() {
+        viewBinding.bottomNavBar.setOnItemSelectedListener {
+            viewBinding.viewPager.currentItem = when(it.itemId) {
+                R.id.gallery_menu_id -> 0
+                R.id.camera_menu_id -> 1
+                R.id.chat_menu_id -> 2
+                else -> 1
+            }
+            return@setOnItemSelectedListener true
+        }
+    }
+
+    private fun setViewPagerAdapter() {
+        val curitem = viewBinding.viewPager.currentItem
+        Log.d(TAG, "current item in viewpager = $curitem")
+        viewBinding.viewPager?.adapter = ViewPagerAdapter(this)
     }
 
     private fun startCamera() {
@@ -137,7 +174,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val TAG = "CameraXApp"
+        private const val TAG = "SynaeraApp"
         private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
         private const val REQUEST_CODE_PERMISSIONS = 10
         private val REQUIRED_PERMISSIONS =
@@ -155,7 +192,6 @@ class MainActivity : AppCompatActivity() {
         requestCode: Int, permissions: Array<String>, grantResults:
         IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-//        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
                 startCamera()
@@ -300,36 +336,4 @@ class MainActivity : AppCompatActivity() {
             image.close()
         }
     }
-
-    /*private fun sendRequest(sUrl : String, array : ByteArray) {
-
-        val body: RequestBody
-
-        val json: String = array.contentToString()
-        body = json.toRequestBody("application/json".toMediaTypeOrNull())
-
-        val request = Request.Builder()
-            .url(sUrl)
-            .post(body)
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                e.printStackTrace()
-            }
-            override fun onResponse(call: Call, response: Response) {
-
-                if (!response.isSuccessful) throw IOException("Unexpected code $response")
-
-                for ((name, value) in response.headers) {
-                    println("$name: $value")
-                }
-
-//                this@MainActivity.runOnUiThread {
-                    val responseData = response.body!!.string()
-                    viewBinding.textView.text = responseData
-//                }
-            }
-        })
-    }*/
 }

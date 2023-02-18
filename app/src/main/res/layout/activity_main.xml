@@ -12,6 +12,15 @@
         android:id="@+id/viewFinder"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+    <androidx.viewpager2.widget.ViewPager2
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/view_pager"
+        app:layout_constraintBottom_toTopOf="@id/bottom_nav_bar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+    </androidx.viewpager2.widget.ViewPager2>
 
     <ImageButton
         android:layout_width="30dp"
@@ -79,6 +88,7 @@
         app:layout_constraintStart_toEndOf="@id/start_capture_button"
         app:layout_constraintEnd_toEndOf="parent"
         android:contentDescription="@string/flip_camera" />
+
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:layout_width="match_parent"
