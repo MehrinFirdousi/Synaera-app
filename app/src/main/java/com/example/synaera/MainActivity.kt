@@ -389,9 +389,12 @@ class MainActivity : AppCompatActivity() {
                                     chatList.add(ChatBubble(result, false))
                                     viewBinding.textView.append(" $result")
                                 }
-                                else
+                                else {
                                     chatList.add(ChatBubble(result, false))
                                     viewBinding.textView.text = result
+                                }
+
+                                viewBinding.viewPager.adapter!!.notifyItemInserted(chatList.lastIndex)
                             }
                         }
                     } catch(exc: Exception) {

@@ -12,9 +12,10 @@ open class RecyclerAdapter(var items: ArrayList<ChatBubble>) :
     RecyclerView.Adapter<RecyclerAdapter.ViewHolder>() {
 
     private lateinit var context : Context
+
+
     inner class ViewHolder(b: ChatItemBinding) : RecyclerView.ViewHolder(b.root) {
         var binding: ChatItemBinding = b
-
 
     }
 
@@ -46,4 +47,5 @@ open class RecyclerAdapter(var items: ArrayList<ChatBubble>) :
             params.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
         }
     }
+
 }
