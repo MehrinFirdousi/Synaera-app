@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/darkgrey"
+    android:background="@color/black"
     tools:context=".ChatFragment">
 
     <androidx.recyclerview.widget.RecyclerView
@@ -20,6 +20,7 @@
         android:layout_margin="10dp"
         android:textColor="@color/white"
         android:textColorHint="@color/white"
+        android:textSize="@dimen/chat_text_size"
         android:hint="Enter a message..."
         android:paddingVertical="10dp"
         android:paddingHorizontal="15dp"

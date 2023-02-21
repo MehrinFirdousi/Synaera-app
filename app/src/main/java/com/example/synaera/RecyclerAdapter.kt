@@ -40,7 +40,8 @@ open class RecyclerAdapter(var items: ArrayList<ChatBubble>) :
         holder.binding.chatItemText.text = currItem.text
         if (currItem.sender) {
             params.startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            holder.binding.chatItemText.setBackgroundColor(ContextCompat.getColor(context, R.color.charcoal))
+            holder.binding.chatItemText.setBackgroundResource(R.drawable.other_message_bubble)
+//            holder.binding.chatItemText.setBackgroundColor(ContextCompat.getColor(context, R.color.charcoal))
         } else {
             params.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
         }

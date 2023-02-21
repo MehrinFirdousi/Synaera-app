@@ -12,12 +12,24 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:text="@string/hello_blank_fragment"
-        android:textSize="@dimen/body_text_size"
+        android:textSize="@dimen/chat_text_size"
         android:padding="16dp"
         android:textColor="@color/white"
-        android:background="@color/chatBlue"
+        android:background="@drawable/my_message_bubble"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="MissingConstraints" />
+<!--    <TextView-->
+<!--        android:id="@+id/chatItemText"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="match_parent"-->
+<!--        android:text="@string/hello_blank_fragment"-->
+<!--        android:textSize="@dimen/chat_text_size"-->
+<!--        android:padding="16dp"-->
+<!--        android:textColor="@color/white"-->
+<!--        android:background="@color/chatBlue"-->
+<!--        app:layout_constraintBottom_toBottomOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent"-->
+<!--        tools:ignore="MissingConstraints" />-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

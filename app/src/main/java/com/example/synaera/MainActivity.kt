@@ -57,14 +57,12 @@ class MainActivity : AppCompatActivity() {
 
         chatList.add(ChatBubble("Hello", true))
         chatList.add(ChatBubble("hi", false))
+        chatList.add(ChatBubble("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum", false))
         chatList.add(ChatBubble("hi", false))
         chatList.add(ChatBubble("hi", false))
         chatList.add(ChatBubble("hi", false))
-        chatList.add(ChatBubble("hi", false))
-        chatList.add(ChatBubble("hi", false))
-        chatList.add(ChatBubble("hi", false))
-        chatList.add(ChatBubble("hi", false))
-        chatList.add(ChatBubble("hi", false))
+        chatList.add(ChatBubble("bye", true))
+        chatList.add(ChatBubble("Lorem ipsum dolor sit amet, et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum", true))
         chatList.add(ChatBubble("hi", false))
         chatList.add(ChatBubble("hi", false))
         chatList.add(ChatBubble("hi", false))
@@ -346,7 +344,7 @@ class MainActivity : AppCompatActivity() {
 
                 val response = client.newCall(request).execute()
                 responseData = response.body!!.string()
-                Log.d(TAG, "responsee: $responseData")
+//                Log.d(TAG, "responsee: $responseData")
 
             } catch (err: Error) {
                 println("Error when executing postt request: "+err.localizedMessage)
@@ -387,10 +385,12 @@ class MainActivity : AppCompatActivity() {
                         if (result != null) {
                             withContext(Dispatchers.Main) {
                                 val curLen = viewBinding.textView.text.length
-                                if (curLen < 100 && !result.contains("nothing")) {
+                                if (curLen < 100) {
+                                    chatList.add(ChatBubble(result, false))
                                     viewBinding.textView.append(" $result")
                                 }
-                                else if (!result.contains("nothing"))
+                                else
+                                    chatList.add(ChatBubble(result, false))
                                     viewBinding.textView.text = result
                             }
                         }
