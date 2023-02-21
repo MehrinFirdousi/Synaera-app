@@ -45,12 +45,30 @@ class MainActivity : AppCompatActivity() {
     private var translationOngoing : Boolean = false
     private var cameraFacing : Int = CameraSelector.LENS_FACING_FRONT
     private var imgNo : Int = 0
+    private var chatList = ArrayList<ChatBubble>()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
+
+        /** sender = true for system, false for user */
+
+        chatList.add(ChatBubble("Hello", true))
+        chatList.add(ChatBubble("hi", false))
+        chatList.add(ChatBubble("hi", false))
+        chatList.add(ChatBubble("hi", false))
+        chatList.add(ChatBubble("hi", false))
+        chatList.add(ChatBubble("hi", false))
+        chatList.add(ChatBubble("hi", false))
+        chatList.add(ChatBubble("hi", false))
+        chatList.add(ChatBubble("hi", false))
+        chatList.add(ChatBubble("hi", false))
+        chatList.add(ChatBubble("hi", false))
+        chatList.add(ChatBubble("hi", false))
+        chatList.add(ChatBubble("hi", false))
+        chatList.add(ChatBubble("hi", false))
 
         // Set up HTTP client
         client = OkHttpClient().newBuilder()
@@ -163,7 +181,7 @@ class MainActivity : AppCompatActivity() {
     private fun setViewPagerAdapter() {
         val curitem = viewBinding.viewPager.currentItem
         Log.d(TAG, "current item in viewpager = $curitem")
-        viewBinding.viewPager.adapter = ViewPagerAdapter(this)
+        viewBinding.viewPager.adapter = ViewPagerAdapter(this, chatList)
     }
 
     private fun startCamera() {
