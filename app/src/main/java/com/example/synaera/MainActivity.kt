@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var client : OkHttpClient
     private lateinit var cameraExecutor: ExecutorService
     private val pickImage = 100
-    private var url : String = "http://10.10.10.30:80/sendImg"
+    private var url : String = "http://192.168.1.16:80/sendImg"
     private var translationOngoing : Boolean = false
     private var cameraFacing : Int = CameraSelector.LENS_FACING_FRONT
     private var imgNo : Int = 0
@@ -68,6 +68,10 @@ class MainActivity : AppCompatActivity() {
                 this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
 
+        setViewPagerAdapter()
+        setBottomNavigation()
+        setViewPagerListener()
+        viewBinding.bottomNavBar.selectedItemId = R.id.camera_menu_id
         val selectImageIntent = registerForActivityResult(ActivityResultContracts.GetContent())
         { uri ->
             //do whatever with the result, its the URI
@@ -87,7 +91,7 @@ class MainActivity : AppCompatActivity() {
                 viewBinding.startCaptureButton.setBackgroundResource(R.drawable.outline_stop_circle_24)
 
             translationOngoing = !translationOngoing
-            viewBinding.textView.text = "" // this should run only once the imageanalyzer stops running and the last packets are done sending, right now it doesnt work properly
+//            viewBinding.textView.text = "" // this should run only once the imageanalyzer stops running and the last packets are done sending, right now it doesnt work properly
         }
         viewBinding.flipCameraButton.setOnClickListener {
             if (cameraFacing == CameraSelector.LENS_FACING_FRONT)
@@ -97,9 +101,6 @@ class MainActivity : AppCompatActivity() {
             startCamera()
         }
         cameraExecutor = Executors.newSingleThreadExecutor()
-        setViewPagerAdapter()
-        setBottomNavigation()
-        setViewPagerListener()
     }
 
     private fun setViewPagerListener() {
@@ -148,6 +149,7 @@ class MainActivity : AppCompatActivity() {
         viewBinding.flipCameraButton.visibility = View.INVISIBLE;
         viewBinding.infoButton.visibility = View.INVISIBLE;
         viewBinding.settingsButton.visibility = View.INVISIBLE;
+        viewBinding.textView.visibility = View.INVISIBLE;
     }
     private fun enableCameraButtons() {
         viewBinding.openGalleryButton.visibility = View.VISIBLE;
@@ -155,6 +157,7 @@ class MainActivity : AppCompatActivity() {
         viewBinding.flipCameraButton.visibility = View.VISIBLE;
         viewBinding.infoButton.visibility = View.VISIBLE;
         viewBinding.settingsButton.visibility = View.VISIBLE;
+        viewBinding.textView.visibility = View.VISIBLE;
     }
 
     private fun setViewPagerAdapter() {
@@ -325,8 +328,14 @@ class MainActivity : AppCompatActivity() {
 
                 val response = client.newCall(request).execute()
                 responseData = response.body!!.string()
+                Log.d(TAG, "responsee: $responseData")
+
             } catch (err: Error) {
                 println("Error when executing postt request: "+err.localizedMessage)
+            }
+            if (responseData != null) {
+                if (responseData.contains("nothing"))
+                    return null
             }
             return (responseData)
         }
@@ -360,22 +369,21 @@ class MainActivity : AppCompatActivity() {
                         if (result != null) {
                             withContext(Dispatchers.Main) {
                                 val curLen = viewBinding.textView.text.length
-                                if (curLen < 30) {
+                                if (curLen < 100 && !result.contains("nothing")) {
                                     viewBinding.textView.append(" $result")
                                 }
-                                else
+                                else if (!result.contains("nothing"))
                                     viewBinding.textView.text = result
                             }
-                            Log.d(TAG, "responsee: $result")
                         }
                     } catch(exc: Exception) {
                         Log.e(TAG, "Cannot connect to Flask server", exc)
                     }
                 }
-                listener(byteArray[0])
+//                listener(byteArray[0])
             }
-            else
-                listener(0)
+//            else
+//                listener(0)
             image.close()
         }
     }
