@@ -15,7 +15,6 @@ open class RecyclerAdapter(var items: ArrayList<ChatBubble>) :
     inner class ViewHolder(b: ChatItemBinding) : RecyclerView.ViewHolder(b.root) {
         var binding: ChatItemBinding = b
 
-
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -46,4 +45,5 @@ open class RecyclerAdapter(var items: ArrayList<ChatBubble>) :
             params.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
         }
     }
+
 }
