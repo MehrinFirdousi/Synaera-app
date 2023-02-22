@@ -41,7 +41,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var client : OkHttpClient
     private lateinit var cameraExecutor: ExecutorService
     private val pickImage = 100
-    private var url : String = "http://192.168.1.16:80/sendImg"
+//    private var url : String = "http://192.168.1.16:80/sendImg"
+    private var url : String = "https://bd8c-5-195-225-158.in.ngrok.io/sendImg"
     private var translationOngoing : Boolean = false
     private var cameraFacing : Int = CameraSelector.LENS_FACING_FRONT
     private var imgNo : Int = 0
@@ -167,6 +168,7 @@ class MainActivity : AppCompatActivity() {
         viewBinding.settingsButton.visibility = View.INVISIBLE;
         viewBinding.textView.visibility = View.INVISIBLE;
     }
+
     private fun enableCameraButtons() {
         viewBinding.openGalleryButton.visibility = View.VISIBLE;
         viewBinding.startCaptureButton.visibility = View.VISIBLE;
@@ -322,17 +324,17 @@ class MainActivity : AppCompatActivity() {
 
         private fun sendPost(array: ByteArray): String? {
             var responseData: String? = null
+            val frameNo = imgNo
             try {
 //                val body: RequestBody
 //
 //                val json: String = array.contentToString()
 //                body = json.toRequestBody("application/json".toMediaTypeOrNull())
-
                 val postBodyImage: RequestBody = MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart(
                         "image",
-                        "frame$imgNo.jpg",
+                        "frame$frameNo.jpg",
                         array.toRequestBody("image/*jpg".toMediaTypeOrNull(), 0, array.size)
                     )
                     .build()
@@ -342,17 +344,22 @@ class MainActivity : AppCompatActivity() {
                     .post(postBodyImage)
                     .build()
 
+                Log.d(TAG, "frame no: $frameNo")
                 val response = client.newCall(request).execute()
                 responseData = response.body!!.string()
-//                Log.d(TAG, "responsee: $responseData")
 
             } catch (err: Error) {
                 println("Error when executing postt request: "+err.localizedMessage)
             }
             if (responseData != null) {
-                if (responseData.contains("nothing"))
+                if (responseData.contains("nothing")) {
                     return null
+                }
+                else
+                    Log.d(TAG, "frame no: $frameNo, responsee: $responseData")
             }
+            else
+                Log.d(TAG, "frame no: $frameNo, responsee: nulll")
             return (responseData)
         }
 
@@ -380,8 +387,8 @@ class MainActivity : AppCompatActivity() {
 
                 lifecycleScope.launch(Dispatchers.IO) {
                     try {
-                        val result = sendPost(byteArray)
                         imgNo++
+                        val result = sendPost(byteArray)
                         if (result != null) {
                             withContext(Dispatchers.Main) {
                                 val curLen = viewBinding.textView.text.length
@@ -389,9 +396,10 @@ class MainActivity : AppCompatActivity() {
                                     chatList.add(ChatBubble(result, false))
                                     viewBinding.textView.append(" $result")
                                 }
-                                else
+                                else {
                                     chatList.add(ChatBubble(result, false))
                                     viewBinding.textView.text = result
+                                }
                             }
                         }
                     } catch(exc: Exception) {
