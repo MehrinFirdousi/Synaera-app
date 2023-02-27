@@ -13,10 +13,20 @@ class ChatFragment() : Fragment() {
 
     lateinit var binding : FragmentChatBinding
     lateinit var list : ArrayList<ChatBubble>
+    lateinit var mAdapter : RecyclerAdapter
+
+    companion object {
+        @JvmStatic
+        fun newInstance(list : ArrayList<ChatBubble>) : ChatFragment {
+            return ChatFragment(list)
+        }
+    }
 
     constructor(list : ArrayList<ChatBubble>) : this() {
         this.list = list
     }
+
+
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -32,6 +42,12 @@ class ChatFragment() : Fragment() {
 
         val layoutManager = LinearLayoutManager(requireContext(), RecyclerView.VERTICAL, false)
         binding.chatRV.layoutManager = layoutManager
-        binding.chatRV.adapter = RecyclerAdapter(list)
+        mAdapter = RecyclerAdapter(list)
+        binding.chatRV.adapter = mAdapter
+    }
+
+    fun addItem (item: ChatBubble) {
+        list.add(item)
+        mAdapter.notifyItemInserted(list.size - 1)
     }
 }

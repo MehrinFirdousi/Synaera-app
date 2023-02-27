@@ -3,12 +3,10 @@ package com.example.synaera
 //import android.media.Image
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.*
 import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -42,7 +40,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cameraExecutor: ExecutorService
     private val pickImage = 100
 //    private var url : String = "http://192.168.1.16:80/sendImg"
-    private var url : String = "https://bd8c-5-195-225-158.in.ngrok.io/sendImg"
+    private var url : String = "http://synaera-api.centralindia.cloudapp.azure.com:5000/sendImg"
     private var translationOngoing : Boolean = false
     private var cameraFacing : Int = CameraSelector.LENS_FACING_FRONT
     private var imgNo : Int = 0
@@ -63,11 +61,17 @@ class MainActivity : AppCompatActivity() {
         chatList.add(ChatBubble("hi", false))
         chatList.add(ChatBubble("hi", false))
         chatList.add(ChatBubble("bye", true))
-        chatList.add(ChatBubble("Lorem ipsum dolor sit amet, et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum", true))
-        chatList.add(ChatBubble("hi", false))
-        chatList.add(ChatBubble("hi", false))
-        chatList.add(ChatBubble("hi", false))
-        chatList.add(ChatBubble("hi", false))
+        //chatList.add(ChatBubble("Lorem ipsum dolor sit amet, et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum", true))
+        chatList.add(ChatBubble("hi1", false))
+        chatList.add(ChatBubble("hi2", false))
+        chatList.add(ChatBubble("hi3", false))
+        chatList.add(ChatBubble("hi4", false))
+        chatList.add(ChatBubble("hi5", false))
+        chatList.add(ChatBubble("hi6", false))
+        chatList.add(ChatBubble("hi7", false))
+        chatList.add(ChatBubble("hi8", false))
+        chatList.add(ChatBubble("hi9", false))
+        chatList.add(ChatBubble("hi10", false))
 
         // Set up HTTP client
         client = OkHttpClient().newBuilder()
@@ -391,17 +395,16 @@ class MainActivity : AppCompatActivity() {
                         val result = sendPost(byteArray)
                         if (result != null) {
                             withContext(Dispatchers.Main) {
+                                val fragment: ChatFragment = supportFragmentManager.findFragmentById(R.id.chat_fragment) as ChatFragment
                                 val curLen = viewBinding.textView.text.length
                                 if (curLen < 100) {
-                                    chatList.add(ChatBubble(result, false))
+                                    fragment.addItem(ChatBubble(result, true))
                                     viewBinding.textView.append(" $result")
                                 }
                                 else {
-                                    chatList.add(ChatBubble(result, false))
+                                    fragment.addItem(ChatBubble(result, true))
                                     viewBinding.textView.text = result
                                 }
-
-                                viewBinding.viewPager.adapter!!.notifyItemInserted(chatList.lastIndex)
                             }
                         }
                     } catch(exc: Exception) {
