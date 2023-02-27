@@ -21,9 +21,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.example.synaera.databinding.ActivityMainBinding
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -34,20 +32,21 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
-typealias ServListener = (serv: Byte) -> Unit
+typealias ServListener = (serv: Int) -> Unit
 
 class MainActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityMainBinding
     private lateinit var client : OkHttpClient
     private lateinit var cameraExecutor: ExecutorService
     private val pickImage = 100
-//    private var url : String = "http://192.168.1.16:80/sendImg"
-    private var url : String = "https://bd8c-5-195-225-158.in.ngrok.io/sendImg"
+//    private var url : String = "http://192.168.1.16:5000/sendImg"
+//    private var url : String = "https://42bd-2001-8f8-1623-131a-c997-5075-626d-f3eb.eu.ngrok.io/sendImg"
+    private var url : String = "http://synaera-api.centralindia.cloudapp.azure.com:5000/sendImg"
     private var translationOngoing : Boolean = false
     private var cameraFacing : Int = CameraSelector.LENS_FACING_FRONT
     private var imgNo : Int = 0
     private var chatList = ArrayList<ChatBubble>()
-
+    private var g_imgNo : Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,9 +70,9 @@ class MainActivity : AppCompatActivity() {
 
         // Set up HTTP client
         client = OkHttpClient().newBuilder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(10, TimeUnit.SECONDS)
-            .writeTimeout(10, TimeUnit.SECONDS)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
             .retryOnConnectionFailure(true)
             .build()
 
@@ -102,8 +101,11 @@ class MainActivity : AppCompatActivity() {
 
 //         Set up the listeners for record, flip camera and open gallery buttons
         viewBinding.startCaptureButton.setOnClickListener {
-            if (translationOngoing)
+            if (translationOngoing) {
                 viewBinding.startCaptureButton.setBackgroundResource(R.drawable.outline_circle_24)
+                imgNo = 0;
+                g_imgNo = 0;
+            }
             else
                 viewBinding.startCaptureButton.setBackgroundResource(R.drawable.outline_stop_circle_24)
 
@@ -202,7 +204,7 @@ class MainActivity : AppCompatActivity() {
                 .build()
                 .also {
                     it.setAnalyzer(cameraExecutor, ServerConnection { serv ->
-                        Log.d(TAG, "byte is: $serv")
+                        Log.d(TAG, "sending: $serv")
                     })
                 }
             // Select back camera as a default
@@ -270,38 +272,7 @@ class MainActivity : AppCompatActivity() {
 
     private inner class ServerConnection(private val listener: ServListener) : ImageAnalysis.Analyzer {
 
-        private fun sendPostRequest(sUrl : String, array : ByteArray) {
-
-            val body: RequestBody
-
-            val json: String = array.contentToString()
-            body = json.toRequestBody("application/json".toMediaTypeOrNull())
-
-            val request = Request.Builder()
-                .url(sUrl)
-                .post(body)
-                .build()
-
-            client.newCall(request).enqueue(object : Callback {
-                override fun onFailure(call: Call, e: IOException) {
-                    e.printStackTrace()
-                }
-                override fun onResponse(call: Call, response: Response) {
-
-                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
-
-                    for ((name, value) in response.headers) {
-                        println("$name: $value")
-                    }
-
-                    //this@MainActivity.runOnUiThread {
-                        val responseData = response.body!!.string()
-                        //viewBinding.textView.text = responseData
-                        Log.d(TAG, "response: $responseData")
-                        //}
-                }
-            })
-        }
+        private val executorService: ExecutorService = Executors.newFixedThreadPool(4)
 
         private fun ImageProxy.toBitmap(): Bitmap {
             val yBuffer = planes[0].buffer // Y
@@ -322,14 +293,9 @@ class MainActivity : AppCompatActivity() {
             return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
         }
 
-        private fun sendPost(array: ByteArray): String? {
-            var responseData: String? = null
-            val frameNo = imgNo
+        fun sendPost(array: ByteArray, frameNo: Int): String {
+            var responseData: String = "nothing"
             try {
-//                val body: RequestBody
-//
-//                val json: String = array.contentToString()
-//                body = json.toRequestBody("application/json".toMediaTypeOrNull())
                 val postBodyImage: RequestBody = MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart(
@@ -340,79 +306,68 @@ class MainActivity : AppCompatActivity() {
                     .build()
 
                 val request = Request.Builder()
-                    .url(url)
+                    .url("$url/$frameNo")
                     .post(postBodyImage)
                     .build()
 
-                Log.d(TAG, "frame no: $frameNo")
+                Log.d(MainActivity.TAG, "frame no: $frameNo")
                 val response = client.newCall(request).execute()
                 responseData = response.body!!.string()
 
             } catch (err: Error) {
-                println("Error when executing postt request: "+err.localizedMessage)
+                println("Error when executing postt request: " + err.localizedMessage)
             }
-            if (responseData != null) {
-                if (responseData.contains("nothing")) {
-                    return null
-                }
-                else
-                    Log.d(TAG, "frame no: $frameNo, responsee: $responseData")
+            if (!responseData.contains("nothing")) {
+                Log.d(MainActivity.TAG, "frame no: $frameNo, responsee: $responseData")
+                return responseData
+            } else {
+                return "nothing"
             }
-            else
-                Log.d(TAG, "frame no: $frameNo, responsee: nulll")
-            return (responseData)
-        }
-
-        private fun ByteBuffer.toByteArray(): ByteArray {
-            rewind()    // Rewind the buffer to zero
-            val data = ByteArray(remaining())
-            get(data)   // Copy the buffer into a byte array
-            return data // Return the byte array
         }
 
         override fun analyze(image: ImageProxy) {
             if (translationOngoing) {
+                g_imgNo++
+                if (g_imgNo % 5 == 0) {
+                    val stream = ByteArrayOutputStream()
+                    val options = BitmapFactory.Options()
+                    options.inPreferredConfig = Bitmap.Config.RGB_565
+                    val imgBitmap = image.toBitmap()
+                    imgBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+                    val byteArray = stream.toByteArray()
+                    val frameNo = ++imgNo
+                    var result = "nothing"
 
-    //            val buffer = image.planes[0].buffer
-    //            val data = buffer.toByteArray()
-    //            val tempData = byteArrayOf(data[0], data[1], data[2], data[3])
-    //            val len = data.size
-
-                val stream = ByteArrayOutputStream()
-                val options = BitmapFactory.Options()
-                options.inPreferredConfig = Bitmap.Config.RGB_565
-                val imgBitmap = image.toBitmap()
-                imgBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-                val byteArray = stream.toByteArray()
-
-                lifecycleScope.launch(Dispatchers.IO) {
-                    try {
-                        imgNo++
-                        val result = sendPost(byteArray)
-                        if (result != null) {
-                            withContext(Dispatchers.Main) {
-                                val curLen = viewBinding.textView.text.length
-                                if (curLen < 100) {
-                                    chatList.add(ChatBubble(result, false))
-                                    viewBinding.textView.append(" $result")
+    //                executorService.submit {
+                    lifecycleScope.launch(Dispatchers.Default) {
+                        try {
+                            result = sendPost(byteArray, frameNo)
+                            if (!result.contains("nothing")) {
+                                runOnUiThread {
+                                    val curLen = viewBinding.textView.text.length
+                                    if (curLen < 100) {
+                                        chatList.add(ChatBubble(result, true))
+                                        viewBinding.textView.append(" $result")
+                                    } else {
+                                        chatList.add(ChatBubble(result, true))
+                                        viewBinding.textView.text = result
+                                    }
+                                    viewBinding.viewPager.adapter!!.notifyItemInserted(chatList.lastIndex)
                                 }
-                                else {
-                                    chatList.add(ChatBubble(result, false))
-                                    viewBinding.textView.text = result
-                                }
-
-                                viewBinding.viewPager.adapter!!.notifyItemInserted(chatList.lastIndex)
                             }
+                        } catch (exc: Exception) {
+                            Log.e(TAG, "Cannot connect to Flask server", exc)
                         }
-                    } catch(exc: Exception) {
-                        Log.e(TAG, "Cannot connect to Flask server", exc)
                     }
+                    listener(imgNo)
                 }
-//                listener(byteArray[0])
             }
-//            else
-//                listener(0)
             image.close()
         }
+
+        fun shutdown() {
+            executorService.shutdownNow()
+        }
     }
+
 }
