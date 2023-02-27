@@ -93,13 +93,13 @@ class MainActivity : AppCompatActivity() {
         setBottomNavigation()
         setViewPagerListener()
         viewBinding.bottomNavBar.selectedItemId = R.id.camera_menu_id
-        val selectImageIntent = registerForActivityResult(ActivityResultContracts.GetContent())
+        val selectVideoIntent = registerForActivityResult(ActivityResultContracts.GetContent())
         { uri ->
             //do whatever with the result, its the URI
         }
 
         viewBinding.openGalleryButton.setOnClickListener {
-            selectImageIntent.launch("image/*")
+            selectVideoIntent.launch("video/*")
         }
 
         // Set up the listeners for record, flip camera and open gallery buttons
