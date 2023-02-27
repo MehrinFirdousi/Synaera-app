@@ -15,7 +15,7 @@ class ViewPagerAdapter(var fa: FragmentActivity, var chatList : ArrayList<ChatBu
         Log.d("position msg: ", "new position = $position")
         return when(position) {
             0 -> FilesFragment.newInstance()
-            2 -> ChatFragment(chatList)
+            2 -> ChatFragment.newInstance(chatList)
             else -> CameraFragment.newInstance()
         }
     }

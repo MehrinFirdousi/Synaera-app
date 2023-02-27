@@ -3,12 +3,10 @@ package com.example.synaera
 //import android.media.Image
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.*
 import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -62,11 +60,17 @@ class MainActivity : AppCompatActivity() {
         chatList.add(ChatBubble("hi", false))
         chatList.add(ChatBubble("hi", false))
         chatList.add(ChatBubble("bye", true))
-        chatList.add(ChatBubble("Lorem ipsum dolor sit amet, et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum", true))
-        chatList.add(ChatBubble("hi", false))
-        chatList.add(ChatBubble("hi", false))
-        chatList.add(ChatBubble("hi", false))
-        chatList.add(ChatBubble("hi", false))
+        //chatList.add(ChatBubble("Lorem ipsum dolor sit amet, et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum", true))
+        chatList.add(ChatBubble("hi1", false))
+        chatList.add(ChatBubble("hi2", false))
+        chatList.add(ChatBubble("hi3", false))
+        chatList.add(ChatBubble("hi4", false))
+        chatList.add(ChatBubble("hi5", false))
+        chatList.add(ChatBubble("hi6", false))
+        chatList.add(ChatBubble("hi7", false))
+        chatList.add(ChatBubble("hi8", false))
+        chatList.add(ChatBubble("hi9", false))
+        chatList.add(ChatBubble("hi10", false))
 
         // Set up HTTP client
         client = OkHttpClient().newBuilder()
@@ -88,13 +92,13 @@ class MainActivity : AppCompatActivity() {
         setBottomNavigation()
         setViewPagerListener()
         viewBinding.bottomNavBar.selectedItemId = R.id.camera_menu_id
-        val selectImageIntent = registerForActivityResult(ActivityResultContracts.GetContent())
+        val selectVideoIntent = registerForActivityResult(ActivityResultContracts.GetContent())
         { uri ->
             //do whatever with the result, its the URI
         }
 
         viewBinding.openGalleryButton.setOnClickListener {
-            selectImageIntent.launch("image/*")
+            selectVideoIntent.launch("video/*")
         }
 
         // Set up the listeners for record, flip camera and open gallery buttons

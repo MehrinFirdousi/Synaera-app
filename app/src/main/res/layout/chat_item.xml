@@ -10,7 +10,7 @@
     <TextView
         android:id="@+id/chatItemText"
         android:layout_width="wrap_content"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:text="@string/hello_blank_fragment"
         android:textSize="@dimen/chat_text_size"
         android:padding="16dp"
