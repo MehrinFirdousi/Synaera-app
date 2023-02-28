@@ -13,7 +13,7 @@ open class RecyclerAdapter(var items: ArrayList<ChatBubble>, val listener : (Cha
 
     private lateinit var context : Context
 
-    inner class ViewHolder(var b: ChatItemBinding) : RecyclerView.ViewHolder(b.root) {
+    inner class ViewHolder(b: ChatItemBinding) : RecyclerView.ViewHolder(b.root) {
         var binding = b
     }
 

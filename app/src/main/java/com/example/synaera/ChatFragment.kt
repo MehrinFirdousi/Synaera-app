@@ -17,6 +17,7 @@ class ChatFragment() : Fragment() {
     private var list : ArrayList<ChatBubble> =  ArrayList()
     private var mAdapter : RecyclerAdapter = RecyclerAdapter(list) { _, _ ->}
     private var editing = false
+    private var firstTime = true
 
     companion object {
         @JvmStatic
@@ -53,9 +54,11 @@ class ChatFragment() : Fragment() {
                 if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
                     if (!editing) {
                         addItem(ChatBubble(binding.editText.text.toString(), false))
+                        scrollToPos(list.size - 1)
                     } else {
                         item.text = binding.editText.text.toString()
                         mAdapter.notifyItemChanged(pos)
+                        scrollToPos(pos)
                         editing = false
                     }
                     binding.editText.setText("")
@@ -64,14 +67,32 @@ class ChatFragment() : Fragment() {
                 false
             })
         }
+
+        //incase user never clicks edit
+        binding.editText.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
+
+                addItem(ChatBubble(binding.editText.text.toString(), false))
+                scrollToPos(list.size - 1)
+                binding.editText.setText("")
+                return@OnKeyListener true
+
+            }
+            false
+        })
+
         binding.chatRV.adapter = mAdapter
+        scrollToPos(list.size - 1)
 
+    }
 
+    private fun scrollToPos(pos: Int) {
+        (binding.chatRV.layoutManager as LinearLayoutManager).scrollToPosition(pos)
     }
 
     fun addItem (item: ChatBubble) {
         list.add(item)
         mAdapter.notifyItemInserted(list.size - 1)
-        //binding.chatRV.adapter = mAdapter
+
     }
 }
