@@ -12,8 +12,8 @@ import com.example.synaera.databinding.FragmentChatBinding
 class ChatFragment() : Fragment() {
 
     lateinit var binding : FragmentChatBinding
-    lateinit var list : ArrayList<ChatBubble>
-    lateinit var mAdapter : RecyclerAdapter
+    var list : ArrayList<ChatBubble> =  ArrayList()
+    var mAdapter : RecyclerAdapter = RecyclerAdapter(list)
 
     companion object {
         @JvmStatic
@@ -49,5 +49,6 @@ class ChatFragment() : Fragment() {
     fun addItem (item: ChatBubble) {
         list.add(item)
         mAdapter.notifyItemInserted(list.size - 1)
+        //binding.chatRV.adapter = mAdapter
     }
 }

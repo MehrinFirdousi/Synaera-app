@@ -8,26 +8,34 @@
     android:background="@color/black"
     tools:context=".ChatFragment">
 
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chatRV"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/editText"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+    </androidx.recyclerview.widget.RecyclerView>
+
     <EditText
+        android:id="@+id/editText"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:background="@drawable/chat_edit_text"
         android:layout_margin="10dp"
+        android:autofillHints="replyMessage"
+        android:background="@drawable/chat_edit_text"
+        android:hint="Enter a message..."
+        android:inputType="text"
+        android:paddingHorizontal="15dp"
+        android:paddingVertical="10dp"
         android:textColor="@color/white"
         android:textColorHint="@color/white"
         android:textSize="@dimen/chat_text_size"
-        android:hint="Enter a message..."
-        android:paddingVertical="10dp"
-        android:paddingHorizontal="15dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
-        android:autofillHints="replyMessage"
-        android:inputType="text" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -16,6 +16,7 @@ import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.example.synaera.databinding.ActivityMainBinding
@@ -45,6 +46,7 @@ class MainActivity : AppCompatActivity() {
     private var imgNo : Int = 0
     private var chatList = ArrayList<ChatBubble>()
     private var g_imgNo : Int = 0
+    private lateinit var chatFragment: ChatFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,6 +73,8 @@ class MainActivity : AppCompatActivity() {
         chatList.add(ChatBubble("hi8", false))
         chatList.add(ChatBubble("hi9", false))
         chatList.add(ChatBubble("hi10", false))
+
+        chatFragment = ChatFragment.newInstance(chatList)
 
         // Set up HTTP client
         client = OkHttpClient().newBuilder()
@@ -187,7 +191,7 @@ class MainActivity : AppCompatActivity() {
     private fun setViewPagerAdapter() {
         val curitem = viewBinding.viewPager.currentItem
         Log.d(TAG, "current item in viewpager = $curitem")
-        viewBinding.viewPager.adapter = ViewPagerAdapter(this, chatList)
+        viewBinding.viewPager.adapter = ViewPagerAdapter(this, chatFragment)
     }
 
     private fun startCamera() {
@@ -308,7 +312,7 @@ class MainActivity : AppCompatActivity() {
                         array.toRequestBody("image/*jpg".toMediaTypeOrNull(), 0, array.size)
                     )
                     .build()
-
+//
                 val request = Request.Builder()
                     .url("$url/$frameNo")
                     .post(postBodyImage)
@@ -350,13 +354,12 @@ class MainActivity : AppCompatActivity() {
                                 runOnUiThread {
                                     val curLen = viewBinding.textView.text.length
                                     if (curLen < 100) {
-                                        chatList.add(ChatBubble(result, true))
+                                        chatFragment.addItem(ChatBubble(result, true))
                                         viewBinding.textView.append(" $result")
                                     } else {
-                                        chatList.add(ChatBubble(result, true))
+                                        chatFragment.addItem(ChatBubble(result, true))
                                         viewBinding.textView.text = result
                                     }
-                                    viewBinding.viewPager.adapter!!.notifyItemInserted(chatList.lastIndex)
                                 }
                             }
                         } catch (exc: Exception) {
