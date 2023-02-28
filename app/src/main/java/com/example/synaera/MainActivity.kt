@@ -302,7 +302,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         fun sendPost(array: ByteArray, frameNo: Int): String {
-            var responseData: String = "nothing"
+            var responseData = "nothing"
             try {
                 val postBodyImage: RequestBody = MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
