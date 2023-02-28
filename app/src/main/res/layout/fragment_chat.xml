@@ -16,9 +16,7 @@
         app:layout_constraintBottom_toTopOf="@+id/editText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-    </androidx.recyclerview.widget.RecyclerView>
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <EditText
         android:id="@+id/editText"

@@ -1,6 +1,7 @@
 package com.example.synaera
 
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,9 +12,9 @@ import com.example.synaera.databinding.FragmentChatBinding
 
 class ChatFragment() : Fragment() {
 
-    lateinit var binding : FragmentChatBinding
-    var list : ArrayList<ChatBubble> =  ArrayList()
-    var mAdapter : RecyclerAdapter = RecyclerAdapter(list)
+    private lateinit var binding : FragmentChatBinding
+    private var list : ArrayList<ChatBubble> =  ArrayList()
+    private var mAdapter : RecyclerAdapter = RecyclerAdapter(list)
 
     companion object {
         @JvmStatic
@@ -44,6 +45,15 @@ class ChatFragment() : Fragment() {
         binding.chatRV.layoutManager = layoutManager
         mAdapter = RecyclerAdapter(list)
         binding.chatRV.adapter = mAdapter
+
+        binding.editText.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
+                addItem(ChatBubble(binding.editText.text.toString(), false))
+                binding.editText.setText("")
+                return@OnKeyListener true
+            }
+            false
+        })
     }
 
     fun addItem (item: ChatBubble) {

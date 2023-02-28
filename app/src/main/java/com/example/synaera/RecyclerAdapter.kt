@@ -36,8 +36,7 @@ open class RecyclerAdapter(var items: ArrayList<ChatBubble>) :
         val params = holder.binding.chatItemText.layoutParams as ConstraintLayout.LayoutParams
 
         val currItem = items[position]
-        val text = currItem.text + " " + currItem.sender
-        holder.binding.chatItemText.text = text
+        holder.binding.chatItemText.text = currItem.text
 
         if (currItem.sender) {
             params.startToStart = ConstraintLayout.LayoutParams.PARENT_ID
