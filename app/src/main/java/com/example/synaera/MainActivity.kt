@@ -54,11 +54,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(viewBinding.root)
 
         /** sender = true for system, false for user */
-
         chatList.add(ChatBubble("Hello", true))
         chatList.add(ChatBubble("hi", false))
         chatList.add(ChatBubble("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum", false))
-        chatList.add(ChatBubble("hi", false))
         chatList.add(ChatBubble("hi", false))
         chatList.add(ChatBubble("hi", false))
         chatList.add(ChatBubble("bye", true))
@@ -66,11 +64,6 @@ class MainActivity : AppCompatActivity() {
         chatList.add(ChatBubble("hi1", false))
         chatList.add(ChatBubble("hi2", false))
         chatList.add(ChatBubble("hi3", false))
-        chatList.add(ChatBubble("hi4", false))
-        chatList.add(ChatBubble("hi5", false))
-        chatList.add(ChatBubble("hi6", false))
-        chatList.add(ChatBubble("hi7", false))
-        chatList.add(ChatBubble("hi8", false))
         chatList.add(ChatBubble("hi9", false))
         chatList.add(ChatBubble("hi10", false))
 
@@ -92,22 +85,24 @@ class MainActivity : AppCompatActivity() {
                 this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
         }
 
+        // Set up adapters and bottom navigation
         setViewPagerAdapter()
         setBottomNavigation()
         setViewPagerListener()
-        viewBinding.bottomNavBar.selectedItemId = R.id.camera_menu_id
+//        viewBinding.bottomNavBar.selectedItemId = R.id.camera_menu_id
+
+        // allow video selection from gallery
         val selectVideoIntent = registerForActivityResult(ActivityResultContracts.GetContent())
         { uri ->
             //do whatever with the result, its the URI
         }
 
+
+        // Set up the listeners for record, flip camera and open gallery buttons
         viewBinding.openGalleryButton.setOnClickListener {
             selectVideoIntent.launch("video/*")
         }
 
-        // Set up the listeners for record, flip camera and open gallery buttons
-
-//         Set up the listeners for record, flip camera and open gallery buttons
         viewBinding.startCaptureButton.setOnClickListener {
             if (translationOngoing) {
                 viewBinding.startCaptureButton.setBackgroundResource(R.drawable.outline_circle_24)
@@ -127,6 +122,7 @@ class MainActivity : AppCompatActivity() {
                 cameraFacing = CameraSelector.LENS_FACING_FRONT
             startCamera()
         }
+
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
@@ -134,9 +130,11 @@ class MainActivity : AppCompatActivity() {
         viewBinding.viewPager.registerOnPageChangeCallback(object: ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 viewBinding.bottomNavBar.selectedItemId = when(position) {
-                    0 ->  R.id.gallery_menu_id
-                    1 ->  R.id.camera_menu_id
-                    2 ->  R.id.chat_menu_id
+                    0 ->  R.id.home_menu_id
+                    1 ->  R.id.gallery_menu_id
+                    2 ->  R.id.camera_menu_id
+                    3 ->  R.id.chat_menu_id
+                    4 ->  R.id.profile_menu_id
                     else -> R.id.camera_menu_id
                 }
                 super.onPageSelected(position)
@@ -152,20 +150,28 @@ class MainActivity : AppCompatActivity() {
 //                R.id.chat_menu_id -> 2
 //                else -> 1
 //            }
-            if (it.itemId == R.id.gallery_menu_id) {
+            if (it.itemId == R.id.home_menu_id) {
                 viewBinding.viewPager.currentItem = 0
                 disableCameraButtons()
             }
-            else if (it.itemId == R.id.camera_menu_id) {
+            else if (it.itemId == R.id.gallery_menu_id) {
                 viewBinding.viewPager.currentItem = 1
+                disableCameraButtons()
+            }
+            else if (it.itemId == R.id.camera_menu_id) {
+                viewBinding.viewPager.currentItem = 2
                 enableCameraButtons()
             }
             else if (it.itemId == R.id.chat_menu_id) {
-                viewBinding.viewPager.currentItem = 2
+                viewBinding.viewPager.currentItem = 3
+                disableCameraButtons()
+            }
+            else if (it.itemId == R.id.profile_menu_id) {
+                viewBinding.viewPager.currentItem = 4
                 disableCameraButtons()
             }
             else
-                viewBinding.viewPager.currentItem = 1
+                viewBinding.viewPager.currentItem = 2
             return@setOnItemSelectedListener true
         }
     }
@@ -189,8 +195,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setViewPagerAdapter() {
-        val curitem = viewBinding.viewPager.currentItem
-        Log.d(TAG, "current item in viewpager = $curitem")
+        val curItem = viewBinding.viewPager.currentItem
+        Log.d(TAG, "current item in viewpager = $curItem")
         viewBinding.viewPager.adapter = ViewPagerAdapter(this, chatFragment)
     }
 

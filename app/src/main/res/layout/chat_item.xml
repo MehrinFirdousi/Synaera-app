@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="16dp"
-    android:layout_marginBottom="24dp">
+    android:layout_marginBottom="16dp">
 
     <TextView
         android:id="@+id/chatItemText"
@@ -19,17 +19,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="MissingConstraints" />
-<!--    <TextView-->
-<!--        android:id="@+id/chatItemText"-->
-<!--        android:layout_width="wrap_content"-->
-<!--        android:layout_height="match_parent"-->
-<!--        android:text="@string/hello_blank_fragment"-->
-<!--        android:textSize="@dimen/chat_text_size"-->
-<!--        android:padding="16dp"-->
-<!--        android:textColor="@color/white"-->
-<!--        android:background="@color/chatBlue"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent"-->
-<!--        tools:ignore="MissingConstraints" />-->
 
 </androidx.constraintlayout.widget.ConstraintLayout>

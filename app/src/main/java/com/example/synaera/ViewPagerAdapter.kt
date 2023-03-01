@@ -8,14 +8,16 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 class ViewPagerAdapter(var fa: FragmentActivity, var chatFragment: ChatFragment) : FragmentStateAdapter(fa) {
 
     override fun getItemCount(): Int {
-        return (3)
+        return (5)
     }
     override fun createFragment(position: Int): Fragment {
 
         Log.d("position msg: ", "new position = $position")
         return when(position) {
-            0 -> FilesFragment.newInstance()
-            2 -> chatFragment
+            0 -> HomeFragment.newInstance()
+            1 -> FilesFragment.newInstance()
+            3 -> chatFragment
+            4 -> ProfileFragment.newInstance()
             else -> CameraFragment.newInstance()
         }
     }
