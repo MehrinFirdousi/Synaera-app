@@ -15,9 +15,9 @@ class ChatFragment() : Fragment() {
 
     private lateinit var binding : FragmentChatBinding
     private var list : ArrayList<ChatBubble> =  ArrayList()
-    private var mAdapter : RecyclerAdapter = RecyclerAdapter(list) { _, _ ->}
+    private lateinit var mAdapter : RecyclerAdapter
     private var editing = false
-    private var firstTime = true
+    private var tempPos = 0
 
     companion object {
         @JvmStatic
@@ -49,34 +49,22 @@ class ChatFragment() : Fragment() {
         mAdapter = RecyclerAdapter(list) {item, pos ->
             binding.editText.setText(item.text)
             editing = true
-
-            binding.editText.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
-                if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
-                    if (!editing) {
-                        addItem(ChatBubble(binding.editText.text.toString(), false))
-                        scrollToPos(list.size - 1)
-                    } else {
-                        item.text = binding.editText.text.toString()
-                        mAdapter.notifyItemChanged(pos)
-                        scrollToPos(pos)
-                        editing = false
-                    }
-                    binding.editText.setText("")
-                    return@OnKeyListener true
-                }
-                false
-            })
+            tempPos = pos
         }
 
-        //incase user never clicks edit
         binding.editText.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
             if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
-
-                addItem(ChatBubble(binding.editText.text.toString(), false))
-                scrollToPos(list.size - 1)
+                if (!editing) {
+                    addItem(ChatBubble(binding.editText.text.toString(), false))
+                    scrollToPos(list.size - 1)
+                } else {
+                    list[tempPos].text = binding.editText.text.toString()
+                    mAdapter.notifyItemChanged(tempPos)
+                    scrollToPos(tempPos)
+                    editing = false
+                }
                 binding.editText.setText("")
                 return@OnKeyListener true
-
             }
             false
         })
