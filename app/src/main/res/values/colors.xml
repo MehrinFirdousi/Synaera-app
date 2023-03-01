@@ -11,6 +11,7 @@
     <color name="trans_black">#7F000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="grey">#FF6e6e6e</color>
+    <color name="lightGrey">#919191</color>
     <color name="lightBlue">#FF81a7db</color>
     <color name="moonstone">#FF58A4B0</color>
 
@@ -25,6 +26,7 @@
 
     <color name="oldrose">#ffa37774</color>
     <color name="seashell">#fffcf0ee</color>
+    <color name="palegreen">#94BBBA</color>
     <color name="feldgrau">#FF466362</color>
     <color name="columbia_blue">#ffc5d5e4</color>
     <color name="spacecadet">#FF1B1B3A</color>

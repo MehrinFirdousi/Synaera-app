@@ -8,7 +8,6 @@
     android:background="@color/black"
     tools:context=".ChatFragment">
 
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chatRV"
         android:layout_width="match_parent"
