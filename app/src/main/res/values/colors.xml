@@ -20,7 +20,7 @@
     <color name="paledogwood">#FFF4D8CD</color>
     <color name="charcoal">#FF373F51</color>
     <color name="melon">#FFDAA49A</color>
-    <color name="chatBlue">#007EF4</color>
+    <color name="buttonBlue">#007EB1</color>
     <color name="bone">#FFE0DDCF</color>
     <color name="verylightgrey">#FFF1F0EA</color>
 
@@ -30,5 +30,7 @@
     <color name="feldgrau">#FF466362</color>
     <color name="columbia_blue">#ffc5d5e4</color>
     <color name="spacecadet">#FF1B1B3A</color>
+
+
 
 </resources>
