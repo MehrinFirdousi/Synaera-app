@@ -6,13 +6,20 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.synaera.databinding.ActivityLoginBinding
 
 class LoginActivity : AppCompatActivity() {
+
+    private lateinit var users : ArrayList<User>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        users = ArrayList()
+
+        users.add(User("Qusai", "qusai@gmail.com", "1234567"))
+
         binding.signupBttn.setOnClickListener{
             val intent = Intent(this, RegisterActivity::class.java)
+            intent.putParcelableArrayListExtra("Users", users)
             startActivity(intent)
         }
 

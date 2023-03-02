@@ -2,10 +2,15 @@ package com.example.synaera
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.example.synaera.databinding.ActivityRegisterBinding
 
 class RegisterActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_register)
+
+        val binding = ActivityRegisterBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        intent.getParcelableArrayExtra("")
     }
 }

@@ -15,7 +15,7 @@ class ChatFragment() : Fragment() {
 
     private lateinit var binding : FragmentChatBinding
     private var list : ArrayList<ChatBubble> =  ArrayList()
-    private lateinit var mAdapter : RecyclerAdapter
+    private var mAdapter : RecyclerAdapter = RecyclerAdapter(ArrayList()) { _, _ ->}
     private var editing = false
     private var tempPos = 0
 
@@ -50,6 +50,8 @@ class ChatFragment() : Fragment() {
             tempPos = pos
         }
 
+        binding.chatRV.adapter = mAdapter
+
         binding.editText.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
             if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
                 if (!editing) {
@@ -67,7 +69,7 @@ class ChatFragment() : Fragment() {
             false
         })
 
-        binding.chatRV.adapter = mAdapter
+
         scrollToPos(list.size - 1)
 
     }
