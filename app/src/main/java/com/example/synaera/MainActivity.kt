@@ -5,6 +5,7 @@ package com.example.synaera
 import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.*
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -16,7 +17,6 @@ import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.example.synaera.databinding.ActivityMainBinding
@@ -24,9 +24,7 @@ import kotlinx.coroutines.*
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
-import java.io.ByteArrayOutputStream
-import java.io.IOException
-import java.nio.ByteBuffer
+import java.io.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -95,6 +93,7 @@ class MainActivity : AppCompatActivity() {
         val selectVideoIntent = registerForActivityResult(ActivityResultContracts.GetContent())
         { uri ->
             //do whatever with the result, its the URI
+            var videoBytes = convertVideoToBytes(uri)
         }
 
 
@@ -126,6 +125,23 @@ class MainActivity : AppCompatActivity() {
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
+    fun convertVideoToBytes(uri: Uri?): ByteArray? {
+        var videoBytes: ByteArray? = null
+        try {
+            val baos = ByteArrayOutputStream()
+            val fis = FileInputStream(File(uri.toString()))
+            val buf = ByteArray(1024)
+            var n: Int
+            while (-1 != fis.read(buf).also { n = it }) baos.write(buf, 0, n)
+            videoBytes = baos.toByteArray()
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return videoBytes
+    }
+
     private fun setViewPagerListener() {
         viewBinding.viewPager.registerOnPageChangeCallback(object: ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
@@ -150,28 +166,29 @@ class MainActivity : AppCompatActivity() {
 //                R.id.chat_menu_id -> 2
 //                else -> 1
 //            }
-            if (it.itemId == R.id.home_menu_id) {
-                viewBinding.viewPager.currentItem = 0
-                disableCameraButtons()
+            when (it.itemId) {
+                R.id.home_menu_id -> {
+                    viewBinding.viewPager.currentItem = 0
+                    disableCameraButtons()
+                }
+                R.id.gallery_menu_id -> {
+                    viewBinding.viewPager.currentItem = 1
+                    disableCameraButtons()
+                }
+                R.id.camera_menu_id -> {
+                    viewBinding.viewPager.currentItem = 2
+                    enableCameraButtons()
+                }
+                R.id.chat_menu_id -> {
+                    viewBinding.viewPager.currentItem = 3
+                    disableCameraButtons()
+                }
+                R.id.profile_menu_id -> {
+                    viewBinding.viewPager.currentItem = 4
+                    disableCameraButtons()
+                }
+                else -> viewBinding.viewPager.currentItem = 2
             }
-            else if (it.itemId == R.id.gallery_menu_id) {
-                viewBinding.viewPager.currentItem = 1
-                disableCameraButtons()
-            }
-            else if (it.itemId == R.id.camera_menu_id) {
-                viewBinding.viewPager.currentItem = 2
-                enableCameraButtons()
-            }
-            else if (it.itemId == R.id.chat_menu_id) {
-                viewBinding.viewPager.currentItem = 3
-                disableCameraButtons()
-            }
-            else if (it.itemId == R.id.profile_menu_id) {
-                viewBinding.viewPager.currentItem = 4
-                disableCameraButtons()
-            }
-            else
-                viewBinding.viewPager.currentItem = 2
             return@setOnItemSelectedListener true
         }
     }
