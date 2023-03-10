@@ -5,6 +5,7 @@ package com.example.synaera
 import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.*
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -23,6 +24,7 @@ import kotlinx.coroutines.*
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
+import java.io.*
 import org.json.JSONArray
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.ExecutorService
@@ -38,7 +40,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cameraExecutor: ExecutorService
     private val pickImage = 100
 //    private var url : String = "http://192.168.1.16:5000/sendImg"
-//    private var url : String = "https://c765-5-195-225-158.in.ngrok.io/sendImg"
+//    private var url : String = "https://42bd-2001-8f8-1623-131a-c997-5075-626d-f3eb.eu.ngrok.io/sendImg"
     private var url : String = "http://synaera-api.centralindia.cloudapp.azure.com:5000/sendImg"
     private var translationOngoing : Boolean = false
     private var cameraFacing : Int = CameraSelector.LENS_FACING_FRONT
@@ -50,6 +52,7 @@ class MainActivity : AppCompatActivity() {
     private var lastFiveFrames: Array<ByteArray?> = arrayOfNulls<ByteArray>(numFramesPerPacket)
     private var numFrames: Int = 0
     private lateinit var chatFragment: ChatFragment
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
@@ -97,6 +100,7 @@ class MainActivity : AppCompatActivity() {
         val selectVideoIntent = registerForActivityResult(ActivityResultContracts.GetContent())
         { uri ->
             //do whatever with the result, its the URI
+            var videoBytes = convertVideoToBytes(uri)
         }
 
 
@@ -129,6 +133,23 @@ class MainActivity : AppCompatActivity() {
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
 
+    fun convertVideoToBytes(uri: Uri?): ByteArray? {
+        var videoBytes: ByteArray? = null
+        try {
+            val baos = ByteArrayOutputStream()
+            val fis = FileInputStream(File(uri.toString()))
+            val buf = ByteArray(1024)
+            var n: Int
+            while (-1 != fis.read(buf).also { n = it }) baos.write(buf, 0, n)
+            videoBytes = baos.toByteArray()
+        } catch (e: FileNotFoundException) {
+            e.printStackTrace()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return videoBytes
+    }
+
     private fun setViewPagerListener() {
         viewBinding.viewPager.registerOnPageChangeCallback(object: ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
@@ -153,28 +174,29 @@ class MainActivity : AppCompatActivity() {
 //                R.id.chat_menu_id -> 2
 //                else -> 1
 //            }
-            if (it.itemId == R.id.home_menu_id) {
-                viewBinding.viewPager.currentItem = 0
-                disableCameraButtons()
+            when (it.itemId) {
+                R.id.home_menu_id -> {
+                    viewBinding.viewPager.currentItem = 0
+                    disableCameraButtons()
+                }
+                R.id.gallery_menu_id -> {
+                    viewBinding.viewPager.currentItem = 1
+                    disableCameraButtons()
+                }
+                R.id.camera_menu_id -> {
+                    viewBinding.viewPager.currentItem = 2
+                    enableCameraButtons()
+                }
+                R.id.chat_menu_id -> {
+                    viewBinding.viewPager.currentItem = 3
+                    disableCameraButtons()
+                }
+                R.id.profile_menu_id -> {
+                    viewBinding.viewPager.currentItem = 4
+                    disableCameraButtons()
+                }
+                else -> viewBinding.viewPager.currentItem = 2
             }
-            else if (it.itemId == R.id.gallery_menu_id) {
-                viewBinding.viewPager.currentItem = 1
-                disableCameraButtons()
-            }
-            else if (it.itemId == R.id.camera_menu_id) {
-                viewBinding.viewPager.currentItem = 2
-                enableCameraButtons()
-            }
-            else if (it.itemId == R.id.chat_menu_id) {
-                viewBinding.viewPager.currentItem = 3
-                disableCameraButtons()
-            }
-            else if (it.itemId == R.id.profile_menu_id) {
-                viewBinding.viewPager.currentItem = 4
-                disableCameraButtons()
-            }
-            else
-                viewBinding.viewPager.currentItem = 2
             return@setOnItemSelectedListener true
         }
     }
