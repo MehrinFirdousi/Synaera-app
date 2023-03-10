@@ -27,7 +27,7 @@ class LoginActivity : AppCompatActivity() {
             val email = binding.emailEditText.text.toString()
             val password = binding.passwordEditText.text.toString()
             if (email.equals("synaera@semaphore.com", true) &&
-                password == "123456") {
+                password == "123") {
                 val intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)
                 finish()

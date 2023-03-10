@@ -16,7 +16,6 @@ import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.example.synaera.databinding.ActivityMainBinding
@@ -24,12 +23,12 @@ import kotlinx.coroutines.*
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONArray
 import java.io.ByteArrayOutputStream
-import java.io.IOException
-import java.nio.ByteBuffer
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+
 
 typealias ServListener = (serv: Int) -> Unit
 
@@ -39,15 +38,18 @@ class MainActivity : AppCompatActivity() {
     private lateinit var cameraExecutor: ExecutorService
     private val pickImage = 100
 //    private var url : String = "http://192.168.1.16:5000/sendImg"
-//    private var url : String = "https://42bd-2001-8f8-1623-131a-c997-5075-626d-f3eb.eu.ngrok.io/sendImg"
+//    private var url : String = "https://c765-5-195-225-158.in.ngrok.io/sendImg"
     private var url : String = "http://synaera-api.centralindia.cloudapp.azure.com:5000/sendImg"
     private var translationOngoing : Boolean = false
     private var cameraFacing : Int = CameraSelector.LENS_FACING_FRONT
     private var imgNo : Int = 0
     private var chatList = ArrayList<ChatBubble>()
     private var g_imgNo : Int = 0
+    private var frameSkipRate : Int = 3
+    private val numFramesPerPacket = 5
+    private var lastFiveFrames: Array<ByteArray?> = arrayOfNulls<ByteArray>(numFramesPerPacket)
+    private var numFrames: Int = 0
     private lateinit var chatFragment: ChatFragment
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
@@ -108,6 +110,7 @@ class MainActivity : AppCompatActivity() {
                 viewBinding.startCaptureButton.setBackgroundResource(R.drawable.outline_circle_24)
                 imgNo = 0;
                 g_imgNo = 0;
+                numFrames = 0;
             }
             else
                 viewBinding.startCaptureButton.setBackgroundResource(R.drawable.outline_stop_circle_24)
@@ -218,7 +221,7 @@ class MainActivity : AppCompatActivity() {
                 .build()
                 .also {
                     it.setAnalyzer(cameraExecutor, ServerConnection { serv ->
-                        Log.d(TAG, "sending: $serv")
+                        Log.d(TAG, "sending: $serv, g_img: $g_imgNo")
                     })
                 }
             // Select back camera as a default
@@ -307,21 +310,42 @@ class MainActivity : AppCompatActivity() {
             return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
         }
 
-        fun sendPost(array: ByteArray, frameNo: Int): String {
+        fun sendPost(images: Array<ByteArray?>, frameNo: Int): String {
             var responseData = "nothing"
             try {
-                val postBodyImage: RequestBody = MultipartBody.Builder()
-                    .setType(MultipartBody.FORM)
-                    .addFormDataPart(
-                        "image",
-                        "frame$frameNo.jpg",
-                        array.toRequestBody("image/*jpg".toMediaTypeOrNull(), 0, array.size)
-                    )
-                    .build()
+//                val arrays = listOf(arrayOf(1,2,3), arrayOf(4,5,6))
+
+//                val jsonArray = JSONArray(images)
+//                val JSON = "application/json; charset=utf-8".toMediaTypeOrNull()
+//                val body: RequestBody = jsonArray.toString().toRequestBody(JSON)
+
+                val builder = MultipartBody.Builder().setType(MultipartBody.FORM)
+                images.forEachIndexed { index, image ->
+                    if (image != null) {
+                        builder.addFormDataPart(
+                            "image$index",
+                            "frame$index.jpg",
+                            image.toRequestBody("image/*jpg".toMediaTypeOrNull(), 0, image.size)
+                        )
+                    }
+                }
+
+                val body : RequestBody = builder.build()
+
+
+//                val postBodyImage: RequestBody = MultipartBody.Builder()
+//                    .setType(MultipartBody.FORM)
+//                    .addFormDataPart(
+//                        "image",
+//                        "frame$frameNo.jpg",
+////                        jsonArray.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+//                        array.toRequestBody("image/*jpg".toMediaTypeOrNull(), 0, array.size)
+//                    )
+//                    .build()
 //
                 val request = Request.Builder()
                     .url("$url/$frameNo")
-                    .post(postBodyImage)
+                    .post(body)
                     .build()
 
                 Log.d(MainActivity.TAG, "frame no: $frameNo")
@@ -342,7 +366,7 @@ class MainActivity : AppCompatActivity() {
         override fun analyze(image: ImageProxy) {
             if (translationOngoing) {
                 g_imgNo++
-                if (g_imgNo % 5 == 0) {
+                if (g_imgNo % frameSkipRate == 0) {
                     val stream = ByteArrayOutputStream()
                     val options = BitmapFactory.Options()
                     options.inPreferredConfig = Bitmap.Config.RGB_565
@@ -351,28 +375,35 @@ class MainActivity : AppCompatActivity() {
                     val byteArray = stream.toByteArray()
                     val frameNo = ++imgNo
                     var result = "nothing"
+                    lastFiveFrames[numFrames++] = byteArray
 
     //                executorService.submit {
-                    lifecycleScope.launch(Dispatchers.Default) {
-                        try {
-                            result = sendPost(byteArray, frameNo)
-                            if (!result.contains("nothing")) {
-                                runOnUiThread {
-                                    val curLen = viewBinding.textView.text.length
-                                    if (curLen < 100) {
-                                        chatFragment.addItem(ChatBubble(result, true))
-                                        viewBinding.textView.append(" $result")
-                                    } else {
-                                        chatFragment.addItem(ChatBubble(result, true))
-                                        viewBinding.textView.text = result
+                    if (numFrames == numFramesPerPacket) {
+                        numFrames = 0
+                        val newArray = lastFiveFrames.copyOf()
+                        // maybe all data before this line is duplicated for the coroutine when it is launched??? reducing that may speed up the coroutine launch
+                        lifecycleScope.launch(Dispatchers.Default) {
+                            try {
+                                result = sendPost(newArray, frameNo)
+                                if (!result.contains("nothing")) {
+                                    runOnUiThread {
+                                        val curLen = viewBinding.textView.text.length
+                                        if (curLen < 100) {
+                                            chatFragment.addItem(ChatBubble(result, true))
+                                            viewBinding.textView.append(" $result")
+                                        } else {
+                                            chatFragment.addItem(ChatBubble(result, true))
+                                            viewBinding.textView.text = result
+                                        }
                                     }
                                 }
+                            } catch (exc: Exception) {
+                                Log.e(TAG, "Cannot connect to Flask server", exc)
                             }
-                        } catch (exc: Exception) {
-                            Log.e(TAG, "Cannot connect to Flask server", exc)
                         }
+                        listener(imgNo)
+//                        lastFiveFrames = arrayOfNulls<ByteArray>(5)
                     }
-                    listener(imgNo)
                 }
             }
             image.close()
