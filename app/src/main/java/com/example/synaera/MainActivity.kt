@@ -70,8 +70,8 @@ class MainActivity : AppCompatActivity(), ServerResultCallback {
         setContentView(viewBinding.root)
 
         mServer = ServerClient.getInstance()
-//        mServer.init("user", "pass", "20.193.159.90", 5000)
-        mServer.init("user", "pass", "192.168.1.39", 5000)
+        mServer.init("user", "pass", "20.193.159.90", 5000)
+//        mServer.init("user", "pass", "192.168.1.39", 5000)
         mServer.connect()
 
         mCameraPreview = viewBinding.viewFinder
@@ -119,6 +119,8 @@ class MainActivity : AppCompatActivity(), ServerResultCallback {
             val frames = getFrames(uri)
             for (frame in frames) {
                 val byteArray = ImageConverter.BitmaptoJPEG(frame)
+                val len = byteArray.size
+                Log.d(TAG, "frame len is $len")
                 mServer.sendImage(byteArray)
                 mLastTime = System.currentTimeMillis()
             }
@@ -168,9 +170,9 @@ class MainActivity : AppCompatActivity(), ServerResultCallback {
     override fun onPause() {
         Log.d(TAG, "onPause")
         super.onPause()
-        if (mIsStreaming) stopStreaming()
-        mServer!!.unregisterCallback()
-        mServer!!.disconnect()
+//        if (mIsStreaming) stopStreaming()
+//        mServer!!.unregisterCallback()
+//        mServer!!.disconnect()
     }
 
     fun convertVideoToBytes(uri: Uri?): ByteArray? {
@@ -195,12 +197,12 @@ class MainActivity : AppCompatActivity(), ServerResultCallback {
 
         val retriever = MediaMetadataRetriever()
         if (uri != null) {
-            val uriStr = uri.path
+            val uriStr = uri.toString()
             Log.d(TAG, "uri = $uriStr")
-            retriever.setDataSource(uri.path)
+            retriever.setDataSource(this, uri)
         }
 
-        val timeInterval = 1000L // extract frame every 1 second
+        val timeInterval = 150L // extract frame every 1 second
 //        val timeUs = 1000000L // Time in microseconds
         val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLong() ?: 0
         val frames = ArrayList<Bitmap>()
@@ -348,8 +350,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback {
 
     private fun startCameraImageAnalysis() {
         Log.d(TAG, "startCameraPreview")
-        val cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
-        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> = ProcessCameraProvider.getInstance(this)
         cameraProviderFuture.addListener({
             try {
                 val cameraProvider = cameraProviderFuture.get()
