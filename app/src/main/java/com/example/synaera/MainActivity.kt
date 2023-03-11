@@ -4,29 +4,29 @@ package com.example.synaera
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.graphics.*
+import android.graphics.Bitmap
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.util.Size
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.LifecycleOwner
 import androidx.viewpager2.widget.ViewPager2
 import com.example.synaera.databinding.ActivityMainBinding
-import kotlinx.coroutines.*
-import okhttp3.*
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody.Companion.toRequestBody
+import com.google.common.util.concurrent.ListenableFuture
+import okhttp3.OkHttpClient
 import java.io.*
-import org.json.JSONArray
-import java.io.ByteArrayOutputStream
+import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -34,29 +34,47 @@ import java.util.concurrent.TimeUnit
 
 typealias ServListener = (serv: Int) -> Unit
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), ServerResultCallback {
     private lateinit var viewBinding: ActivityMainBinding
     private lateinit var client : OkHttpClient
     private lateinit var cameraExecutor: ExecutorService
     private val pickImage = 100
 //    private var url : String = "http://192.168.1.16:5000/sendImg"
 //    private var url : String = "https://42bd-2001-8f8-1623-131a-c997-5075-626d-f3eb.eu.ngrok.io/sendImg"
-    private var url : String = "http://synaera-api.centralindia.cloudapp.azure.com:5000/sendImg"
+//    private var url : String = "http://synaera-api.centralindia.cloudapp.azure.com:5000/sendImg"
     private var translationOngoing : Boolean = false
     private var cameraFacing : Int = CameraSelector.LENS_FACING_FRONT
-    private var imgNo : Int = 0
     private var chatList = ArrayList<ChatBubble>()
-    private var g_imgNo : Int = 0
-    private var frameSkipRate : Int = 3
-    private val numFramesPerPacket = 5
-    private var lastFiveFrames: Array<ByteArray?> = arrayOfNulls<ByteArray>(numFramesPerPacket)
-    private var numFrames: Int = 0
     private lateinit var chatFragment: ChatFragment
+
+    private lateinit var mServer: ServerClient
+    private lateinit var mCameraPreview: PreviewView
+
+    // Camera Use-Cases
+    private var mPreview : Preview? = null
+    private var mImageAnalysis: ImageAnalysis? = null
+
+    private val mTargetWidth = 640
+    private val mTargetHeight = 480
+
+    private var mLastTime: Long = 0
+    private val mUploadDelay: Long = 100
+
+    private var mIsStreaming = false
+
+    private val mStreamFromCameraPreview = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
+
+        mServer = ServerClient.getInstance()
+//        mServer.init("user", "pass", "20.193.159.90", 5000)
+        mServer.init("user", "pass", "192.168.1.39", 5000)
+        mServer.connect()
+
+        mCameraPreview = viewBinding.viewFinder
 
         /** sender = true for system, false for user */
         chatList.add(ChatBubble("Hello", true))
@@ -66,10 +84,6 @@ class MainActivity : AppCompatActivity() {
         chatList.add(ChatBubble("hi", false))
         chatList.add(ChatBubble("bye", true))
         //chatList.add(ChatBubble("Lorem ipsum dolor sit amet, et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum", true))
-        chatList.add(ChatBubble("hi1", false))
-        chatList.add(ChatBubble("hi2", false))
-        chatList.add(ChatBubble("hi3", false))
-        chatList.add(ChatBubble("hi9", false))
         chatList.add(ChatBubble("hi10", false))
 
         chatFragment = ChatFragment.newInstance(chatList)
@@ -84,7 +98,7 @@ class MainActivity : AppCompatActivity() {
 
         // Request camera permissions
         if (allPermissionsGranted()) {
-            startCamera()
+            startCameraPreview()
         } else {
             ActivityCompat.requestPermissions(
                 this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
@@ -100,9 +114,15 @@ class MainActivity : AppCompatActivity() {
         val selectVideoIntent = registerForActivityResult(ActivityResultContracts.GetContent())
         { uri ->
             //do whatever with the result, its the URI
-            var videoBytes = convertVideoToBytes(uri)
-        }
+//            var videoBytes = convertVideoToBytes(uri)
 
+            val frames = getFrames(uri)
+            for (frame in frames) {
+                val byteArray = ImageConverter.BitmaptoJPEG(frame)
+                mServer.sendImage(byteArray)
+                mLastTime = System.currentTimeMillis()
+            }
+        }
 
         // Set up the listeners for record, flip camera and open gallery buttons
         viewBinding.openGalleryButton.setOnClickListener {
@@ -110,15 +130,22 @@ class MainActivity : AppCompatActivity() {
         }
 
         viewBinding.startCaptureButton.setOnClickListener {
-            if (translationOngoing) {
+            if (translationOngoing) { // stop translation here
                 viewBinding.startCaptureButton.setBackgroundResource(R.drawable.outline_circle_24)
-                imgNo = 0;
-                g_imgNo = 0;
-                numFrames = 0;
+                if (mStreamFromCameraPreview) {
+                    stopStreaming()
+                } else {
+                    stopCameraImageAnalysis()
+                }
             }
-            else
+            else { // start translation here
                 viewBinding.startCaptureButton.setBackgroundResource(R.drawable.outline_stop_circle_24)
-
+                if (mStreamFromCameraPreview) {
+                    startStreaming()
+                } else {
+                    startCameraImageAnalysis()
+                }
+            }
             translationOngoing = !translationOngoing
 //            viewBinding.textView.text = "" // this should run only once the imageanalyzer stops running and the last packets are done sending, right now it doesnt work properly
         }
@@ -127,10 +154,23 @@ class MainActivity : AppCompatActivity() {
                 cameraFacing = CameraSelector.LENS_FACING_BACK
             else
                 cameraFacing = CameraSelector.LENS_FACING_FRONT
-            startCamera()
+            startCameraPreview()
         }
 
         cameraExecutor = Executors.newSingleThreadExecutor()
+    }
+    override fun onResume() {
+        Log.d(TAG, "onResume")
+        super.onResume()
+        mServer!!.registerCallback(this)
+        mServer!!.connect()
+    }
+    override fun onPause() {
+        Log.d(TAG, "onPause")
+        super.onPause()
+        if (mIsStreaming) stopStreaming()
+        mServer!!.unregisterCallback()
+        mServer!!.disconnect()
     }
 
     fun convertVideoToBytes(uri: Uri?): ByteArray? {
@@ -150,6 +190,30 @@ class MainActivity : AppCompatActivity() {
         return videoBytes
     }
 
+    private fun getFrames(uri: Uri?) : ArrayList<Bitmap> {
+//        val bitmap = retriever.getFrameAtTime(timeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+
+        val retriever = MediaMetadataRetriever()
+        if (uri != null) {
+            val uriStr = uri.path
+            Log.d(TAG, "uri = $uriStr")
+            retriever.setDataSource(uri.path)
+        }
+
+        val timeInterval = 1000L // extract frame every 1 second
+//        val timeUs = 1000000L // Time in microseconds
+        val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLong() ?: 0
+        val frames = ArrayList<Bitmap>()
+
+        for (time in 0L..duration step timeInterval) {
+            val frame = retriever.getFrameAtTime(time * 1000L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+            val bitmap = frame?.let { Bitmap.createBitmap(it) }
+            if (bitmap != null) {
+                frames.add(bitmap)
+            }
+        }
+        return frames
+    }
     private fun setViewPagerListener() {
         viewBinding.viewPager.registerOnPageChangeCallback(object: ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
@@ -225,48 +289,6 @@ class MainActivity : AppCompatActivity() {
         viewBinding.viewPager.adapter = ViewPagerAdapter(this, chatFragment)
     }
 
-    private fun startCamera() {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-
-        cameraProviderFuture.addListener({
-            // Used to bind the lifecycle of cameras to the lifecycle owner
-            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
-
-            // Preview
-            val preview = Preview.Builder()
-                .build()
-                .also {
-                    it.setSurfaceProvider(viewBinding.viewFinder.surfaceProvider)
-                }
-
-            val imageAnalyzer = ImageAnalysis.Builder()
-                .build()
-                .also {
-                    it.setAnalyzer(cameraExecutor, ServerConnection { serv ->
-                        Log.d(TAG, "sending: $serv, g_img: $g_imgNo")
-                    })
-                }
-            // Select back camera as a default
-            val cameraSelector: CameraSelector = if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
-                CameraSelector.DEFAULT_FRONT_CAMERA
-            } else {
-                CameraSelector.DEFAULT_BACK_CAMERA
-            }
-            try {
-                // Unbind use cases before rebinding
-                cameraProvider.unbindAll()
-
-                // Bind use cases to camera
-                cameraProvider.bindToLifecycle(
-                    this, cameraSelector, preview, imageAnalyzer)
-
-            } catch(exc: Exception) {
-                Log.e(TAG, "Use case binding failed", exc)
-            }
-
-        }, ContextCompat.getMainExecutor(this))
-    }
-
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
         ContextCompat.checkSelfPermission(
             baseContext, it) == PackageManager.PERMISSION_GRANTED
@@ -299,7 +321,7 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
-                startCamera()
+                startCameraPreview()
             } else {
                 Toast.makeText(this,
                     "Permissions not granted by the user.",
@@ -309,131 +331,126 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private inner class ServerConnection(private val listener: ServListener) : ImageAnalysis.Analyzer {
-
-        private val executorService: ExecutorService = Executors.newFixedThreadPool(4)
-
-        private fun ImageProxy.toBitmap(): Bitmap {
-            val yBuffer = planes[0].buffer // Y
-            val vuBuffer = planes[2].buffer // VU
-
-            val ySize = yBuffer.remaining()
-            val vuSize = vuBuffer.remaining()
-
-            val nv21 = ByteArray(ySize + vuSize)
-
-            yBuffer.get(nv21, 0, ySize)
-            vuBuffer.get(nv21, ySize, vuSize)
-
-            val yuvImage = YuvImage(nv21, ImageFormat.NV21, this.width, this.height, null)
-            val out = ByteArrayOutputStream()
-            yuvImage.compressToJpeg(Rect(0, 0, yuvImage.width, yuvImage.height), 50, out)
-            val imageBytes = out.toByteArray()
-            return BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-        }
-
-        fun sendPost(images: Array<ByteArray?>, frameNo: Int): String {
-            var responseData = "nothing"
+    private fun startCameraPreview() {
+        Log.d(TAG, "startCameraPreview")
+        val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> =
+            ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
             try {
-//                val arrays = listOf(arrayOf(1,2,3), arrayOf(4,5,6))
-
-//                val jsonArray = JSONArray(images)
-//                val JSON = "application/json; charset=utf-8".toMediaTypeOrNull()
-//                val body: RequestBody = jsonArray.toString().toRequestBody(JSON)
-
-                val builder = MultipartBody.Builder().setType(MultipartBody.FORM)
-                images.forEachIndexed { index, image ->
-                    if (image != null) {
-                        builder.addFormDataPart(
-                            "image$index",
-                            "frame$index.jpg",
-                            image.toRequestBody("image/*jpg".toMediaTypeOrNull(), 0, image.size)
-                        )
-                    }
-                }
-
-                val body : RequestBody = builder.build()
-
-
-//                val postBodyImage: RequestBody = MultipartBody.Builder()
-//                    .setType(MultipartBody.FORM)
-//                    .addFormDataPart(
-//                        "image",
-//                        "frame$frameNo.jpg",
-////                        jsonArray.toString().toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
-//                        array.toRequestBody("image/*jpg".toMediaTypeOrNull(), 0, array.size)
-//                    )
-//                    .build()
-//
-                val request = Request.Builder()
-                    .url("$url/$frameNo")
-                    .post(body)
-                    .build()
-
-                Log.d(MainActivity.TAG, "frame no: $frameNo")
-                val response = client.newCall(request).execute()
-                responseData = response.body!!.string()
-
-            } catch (err: Error) {
-                println("Error when executing postt request: " + err.localizedMessage)
+                val cameraProvider = cameraProviderFuture.get()
+                bindPreview(cameraProvider)
+            } catch (e: ExecutionException) {
+                // do nothing
+            } catch (_: InterruptedException) {
             }
-            if (!responseData.contains("nothing")) {
-                Log.d(MainActivity.TAG, "frame no: $frameNo, responsee: $responseData")
-                return responseData
-            } else {
-                return "nothing"
-            }
-        }
-
-        override fun analyze(image: ImageProxy) {
-            if (translationOngoing) {
-                g_imgNo++
-                if (g_imgNo % frameSkipRate == 0) {
-                    val stream = ByteArrayOutputStream()
-                    val options = BitmapFactory.Options()
-                    options.inPreferredConfig = Bitmap.Config.RGB_565
-                    val imgBitmap = image.toBitmap()
-                    imgBitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-                    val byteArray = stream.toByteArray()
-                    val frameNo = ++imgNo
-                    var result = "nothing"
-                    lastFiveFrames[numFrames++] = byteArray
-
-    //                executorService.submit {
-                    if (numFrames == numFramesPerPacket) {
-                        numFrames = 0
-                        val newArray = lastFiveFrames.copyOf()
-                        // maybe all data before this line is duplicated for the coroutine when it is launched??? reducing that may speed up the coroutine launch
-                        lifecycleScope.launch(Dispatchers.Default) {
-                            try {
-                                result = sendPost(newArray, frameNo)
-                                if (!result.contains("nothing")) {
-                                    runOnUiThread {
-                                        val curLen = viewBinding.textView.text.length
-                                        if (curLen < 100) {
-                                            chatFragment.addItem(ChatBubble(result, true))
-                                            viewBinding.textView.append(" $result")
-                                        } else {
-                                            chatFragment.addItem(ChatBubble(result, true))
-                                            viewBinding.textView.text = result
-                                        }
-                                    }
-                                }
-                            } catch (exc: Exception) {
-                                Log.e(TAG, "Cannot connect to Flask server", exc)
-                            }
-                        }
-                        listener(imgNo)
-//                        lastFiveFrames = arrayOfNulls<ByteArray>(5)
-                    }
-                }
-            }
-            image.close()
-        }
-
-        fun shutdown() {
-            executorService.shutdownNow()
-        }
+        }, ContextCompat.getMainExecutor(this))
     }
 
+    private fun startCameraImageAnalysis() {
+        Log.d(TAG, "startCameraPreview")
+        val cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
+        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
+            try {
+                val cameraProvider = cameraProviderFuture.get()
+                bindImageAnalysis(cameraProvider) // The stream will start after the bind
+            } catch (e: ExecutionException) {
+            } catch (e: InterruptedException) {
+            }
+        }, ContextCompat.getMainExecutor(this))
+    }
+
+    private fun bindPreview(cameraProvider: ProcessCameraProvider) {
+        mPreview = Preview.Builder().build()
+        // Preview use-case will render a preview image on the screen as defined by the PreviewView
+        // element on the main's layout activity. The resolution of the layout is relative to the
+        // screen size and defined in dp, which means the final resolution in pixels will be decided
+        // at run-time when the layout is inflated to the device screen. But will always be proportional
+        // to the resolution defined on the layout.
+
+        mPreview!!.setSurfaceProvider(mCameraPreview?.createSurfaceProvider())
+        val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+        cameraProvider.bindToLifecycle(this as LifecycleOwner, cameraSelector, mPreview)
+    }
+    private fun bindImageAnalysis(cameraProvider: ProcessCameraProvider) {
+        mImageAnalysis = ImageAnalysis.Builder()
+//            .setTargetResolution(Size(mTargetWidth, mTargetHeight))
+//            .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST) // non blocking
+            .build()
+
+        // Image Analysis use-case will not render the image on the screen, but will
+        // deliver a frame by frame image (stream) directly from the camera buffer to the analyser.
+        // In this case we can set an actual target resolution as defined by the user. CameraX will
+        // try to match the captured resolution to the target resolution. If it cannot match, will
+        // capture the frame with the resolution immediately above.
+        mImageAnalysis!!.setAnalyzer(
+            Executors.newFixedThreadPool(3),
+            ImageAnalysis.Analyzer { image: ImageProxy ->
+                val elapsedTime: Long = System.currentTimeMillis() - mLastTime
+                if (elapsedTime > mUploadDelay && mUploadDelay != 0L) {   // Bound the image upload based on the user-defined frequency
+                    val byteArray: ByteArray
+                    // This its a better camera stream but the conversion might create artifacts with
+                    // some cameras. Needs more investigation
+                    byteArray = ImageConverter.YUV_420_800toJPEG(image)
+                    mServer?.sendImage(byteArray)
+                    mLastTime = System.currentTimeMillis()
+                }
+                image.close()
+            })
+        val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+        cameraProvider.bindToLifecycle((this as LifecycleOwner), cameraSelector, mImageAnalysis)
+    }
+    private fun stopCameraImageAnalysis() {
+        val cameraProviderFuture: ListenableFuture<ProcessCameraProvider>
+        cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
+            try {
+                val cameraProvider = cameraProviderFuture.get()
+                cameraProvider.unbind(mImageAnalysis) // The stream will stop after the unbind
+            } catch (e: ExecutionException) {
+                // do nothing
+            } catch (e: InterruptedException) {
+            }
+        }, ContextCompat.getMainExecutor(this))
+    }
+
+    private fun startStreaming() {
+        mIsStreaming = true
+        Thread {
+            while (mIsStreaming) {
+                val elapsedTime: Long = System.currentTimeMillis() - mLastTime
+                if (elapsedTime > mUploadDelay && mUploadDelay != 0L) {   // Bound the image upload based on the user-defined frequency
+                    var byteArray: ByteArray
+                    val bmp = mCameraPreview!!.bitmap
+                    val bmp2 = Bitmap.createScaledBitmap(bmp!!, mTargetWidth, mTargetHeight, false)
+                    byteArray = ImageConverter.BitmaptoJPEG(bmp2)
+                    mServer?.sendImage(byteArray)
+                    mLastTime = System.currentTimeMillis()
+                }
+            }
+        }.start()
+    }
+
+    private fun stopStreaming() {
+        mIsStreaming = false
+    }
+
+    override fun onConnected(success: Boolean) {
+        Log.d(TAG, "ServerResultCallback-onConnected: $success")
+    }
+
+    override fun displayResponse(result: String) {
+        Log.d(TAG, "displayResponse in main act: $result")
+        runOnUiThread {
+            val curLen = viewBinding.textView.text.length
+            if (curLen < 100) {
+                chatFragment.addItem(ChatBubble(result, true))
+                viewBinding.textView.append(" $result")
+            } else {
+                chatFragment.addItem(ChatBubble(result, true))
+                viewBinding.textView.text = result
+            }
+        }
+    }
 }

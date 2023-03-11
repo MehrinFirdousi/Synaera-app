@@ -15,7 +15,7 @@ class LoginActivity : AppCompatActivity() {
 
         users = ArrayList()
 
-        users.add(User("Qusai", "qusai@gmail.com", "123"))
+        users.add(User("Qusai", "qusai@gmail.com", "1"))
 
         binding.signupBttn.setOnClickListener{
             val intent = Intent(this, RegisterActivity::class.java)
