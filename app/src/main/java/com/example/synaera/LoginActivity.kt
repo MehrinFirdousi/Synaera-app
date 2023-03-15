@@ -2,6 +2,8 @@ package com.example.synaera
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.KeyEvent
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.example.synaera.databinding.ActivityLoginBinding
 
@@ -34,6 +36,14 @@ class LoginActivity : AppCompatActivity() {
                 }
             }
         }
+
+        binding.passwordEditText.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
+            if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
+                binding.loginBttn.performClick()
+                return@OnKeyListener true
+            }
+            false
+        })
     }
 
 
