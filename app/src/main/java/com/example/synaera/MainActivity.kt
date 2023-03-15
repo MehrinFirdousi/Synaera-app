@@ -153,9 +153,12 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                     executorService.execute {
                         try {
                             frameExtractor.extractFrames(videoInputFile.absolutePath)
-                            filesFragment.addItem(VideoItem("Video3", "Process", videoThumbnail, "test"))
+                            this.runOnUiThread {
+                                filesFragment.addItem(VideoItem("Video3", "Process", videoThumbnail, "test"))
+                            }
                         } catch (exception: Exception) {
                             exception.printStackTrace()
+                            Log.d(TAG, "Failed!!!")
                             this.runOnUiThread {
                                 Toast.makeText(
                                     this,
