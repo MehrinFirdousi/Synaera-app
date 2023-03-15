@@ -51,41 +51,14 @@ class ChatFragment() : Fragment() {
         }
 
         binding.chatRV.adapter = mAdapter
-        var editString : String
 
         binding.sendBttn.setOnClickListener{
-            editString = binding.editText.text.toString().trim()
-            if (editString != "") {
-                if (!editing) {
-                    addItem(ChatBubble(editString, false))
-                    scrollToPos(list.size - 1)
-                } else {
-                    list[tempPos].text = editString
-                    mAdapter.notifyItemChanged(tempPos)
-                    scrollToPos(tempPos)
-                    editing = false
-                }
-            }
-
-            binding.editText.setText("")
+            setListener()
         }
 
         binding.editText.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
             if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
-                editString = binding.editText.text.toString().trim()
-                if (editString != "") {
-                    if (!editing) {
-                        addItem(ChatBubble(binding.editText.text.toString().trim(), false))
-                        scrollToPos(list.size - 1)
-                    } else {
-                        list[tempPos].text = binding.editText.text.toString().trim()
-                        mAdapter.notifyItemChanged(tempPos)
-                        scrollToPos(tempPos)
-                        editing = false
-                    }
-                }
-                binding.editText.setText("")
-
+                setListener()
                 return@OnKeyListener true
             }
             false
@@ -104,5 +77,21 @@ class ChatFragment() : Fragment() {
         list.add(item)
         mAdapter.notifyItemInserted(list.size - 1)
 
+    }
+
+    private fun setListener() {
+        val editString = binding.editText.text.toString().trim()
+        if (editString != "") {
+            if (!editing) {
+                addItem(ChatBubble(editString, false))
+                scrollToPos(list.size - 1)
+            } else {
+                list[tempPos].text = editString
+                mAdapter.notifyItemChanged(tempPos)
+                scrollToPos(tempPos)
+                editing = false
+            }
+        }
+        binding.editText.setText("")
     }
 }
