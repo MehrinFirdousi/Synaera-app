@@ -32,6 +32,7 @@
     <color name="columbia_blue">#ffc5d5e4</color>
     <color name="spacecadet">#FF1B1B3A</color>
 
-
+    <color name="recordRed">#C32C49</color>
+    <color name="recordRedTrans">#8FEC133E</color>
 
 </resources>
