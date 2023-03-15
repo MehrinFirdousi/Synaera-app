@@ -81,13 +81,13 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
     private lateinit var handler: Handler
     private var runnable: Runnable? = null
 
-
     private var recordAnimation: ButtonAnimator = ButtonAnimator()
     private val executorService: ExecutorService = Executors.newSingleThreadExecutor()
 
-    private var bottomNavWidth: Int = 0
-
+    private lateinit var videoThumbnail: Bitmap
+    private var videoFrames = ArrayList<ByteArray>()
     //    var filesFragment = FilesFragment()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
@@ -153,6 +153,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                     executorService.execute {
                         try {
                             frameExtractor.extractFrames(videoInputFile.absolutePath)
+                            filesFragment.addItem(VideoItem("Video3", "Process", videoThumbnail, "test"))
                         } catch (exception: Exception) {
                             exception.printStackTrace()
                             this.runOnUiThread {
@@ -164,7 +165,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                             }
                         }
                     }
-                    viewBinding.bottomNavBar.selectedItemId = R.id.gallery_menu_id
+                    viewBinding.bottomNavBar.selectedItemId = R.id.gallery_menu_id // switches to gallery fragment
 
                 } else {
                     Toast.makeText(this, "Video input error!", Toast.LENGTH_LONG).show()
@@ -221,7 +222,6 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
         circleView = viewBinding.recordCircle
         recordButton = viewBinding.recordButton
-        bottomNavWidth = viewBinding.bottomNavBar.width
 
         circleView.setOnClickListener {
             viewBinding.openGalleryButton.visibility = View.VISIBLE
@@ -625,15 +625,18 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         outputBitmap.density = DisplayMetrics.DENSITY_DEFAULT
         return outputBitmap
     }
-    override fun onCurrentFrameExtracted(currentFrame: Frame) {
+    override fun onCurrentFrameExtracted(currentFrame: Frame, decodeCount: Int) {
 //        Thread {
             // 1. Convert frame byte buffer to bitmap
         val imageBitmap = fromBufferToBitmap(currentFrame.byteBuffer, currentFrame.width, currentFrame.height)
         val byteArray = ImageConverter.BitmaptoJPEG(imageBitmap)
-        val len = byteArray.size
-        Log.d(TAG, "frame len is $len")
-        mServer.sendImage(byteArray)
-        mLastTime = System.currentTimeMillis()
+
+        videoFrames.add(byteArray)
+//        mServer.sendImage(byteArray)
+//        mLastTime = System.currentTimeMillis()
+        if (decodeCount == 0)
+            videoThumbnail = imageBitmap!!
+
 //        }.start()
 
         /*// 2. Get the frame file in app external file directory
@@ -660,6 +663,11 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
     }
 
     override fun onAllFrameExtracted(processedFrameCount: Int, processedTimeMs: Long) {
+        Thread {
+            for (frame in videoFrames) {
+                mServer.sendImage(frame)
+            }
+        }.start()
         Log.d(TAG, "Save: $processedFrameCount frames in: $processedTimeMs ms.")
     }
 
