@@ -1,6 +1,8 @@
 package com.example.synaera
 
 import android.Manifest
+import android.animation.AnimatorSet
+import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -14,6 +16,7 @@ import android.os.Handler
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -140,12 +143,10 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                     val frameExtractor = FrameExtractor(this)
                     executorService.execute {
                         try {
-
                             frameExtractor.extractFrames(videoInputFile.absolutePath)
                         } catch (exception: Exception) {
                             exception.printStackTrace()
                             this.runOnUiThread {
-                                Log.d(TAG, "failed!!!!!")
                                 Toast.makeText(
                                     this,
                                     "Failed to extract frames",
@@ -154,7 +155,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                             }
                         }
                     }
-
+                    viewBinding.bottomNavBar.selectedItemId = R.id.gallery_menu_id
 
                 } else {
                     Toast.makeText(this, "Video input error!", Toast.LENGTH_LONG).show()
@@ -172,7 +173,6 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 //                mServer.sendImage(byteArray)
 //                mLastTime = System.currentTimeMillis()
 //            }
-
 
         }
 
@@ -229,9 +229,10 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                     circleView.getmMinStroke()
                 )
                 handler.postDelayed(runnable!!, 80)
-                viewBinding.bottomNavBar.updateLayoutParams {
-                    height = dpToPx(1)
-                }
+                slideView(viewBinding.bottomNavBar, viewBinding.bottomNavBar.layoutParams.height, 1)
+//                viewBinding.bottomNavBar.updateLayoutParams {
+//                    height = dpToPx(1)
+//                }
                 viewBinding.openGalleryButton.visibility = View.INVISIBLE
                 viewBinding.flipCameraButton.visibility = View.INVISIBLE
                 viewBinding.infoButton.visibility = View.INVISIBLE
@@ -250,11 +251,10 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                 recordAnimation.stopAnimationOfSquare(resources, recordButton)
                 handler.removeCallbacks(runnable!!)
                 recordAnimation.resetAnimation(circleView)
-//                viewBinding.bottomNavBar.visibility = View.VISIBLE
-//                viewBinding.bottomNavBar.layoutParams = ConstraintLayout.LayoutParams(bottomNavWidth, 55)
-                viewBinding.bottomNavBar.updateLayoutParams {
-                    height = dpToPx(55)
-                }
+                slideView(viewBinding.bottomNavBar, 1, dpToPx(55))
+//                viewBinding.bottomNavBar.updateLayoutParams {
+//                    height = dpToPx(55)
+//                }
                 viewBinding.openGalleryButton.visibility = View.VISIBLE
                 viewBinding.flipCameraButton.visibility = View.VISIBLE
                 viewBinding.infoButton.visibility = View.VISIBLE
@@ -286,6 +286,21 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 //        mServer!!.unregisterCallback()
 //        mServer!!.disconnect()
     }
+
+    private fun slideView(view: View, currentHeight: Int, newHeight: Int) {
+        val slideAnimator = ValueAnimator.ofInt(currentHeight, newHeight).setDuration(400)
+        slideAnimator.addUpdateListener { animation1 ->
+            val value = animation1.animatedValue as Int
+            view.layoutParams.height = value
+            view.requestLayout()
+        }
+
+        val animationSet = AnimatorSet()
+        animationSet.interpolator = AccelerateDecelerateInterpolator()
+        animationSet.play(slideAnimator)
+        animationSet.start()
+    }
+
 
     fun dpToPx(dp: Int): Int {
         val density: Float = resources.displayMetrics.density

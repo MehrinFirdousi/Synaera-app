@@ -12,7 +12,7 @@
         android:id="@+id/viewFinder"
         android:layout_width="640dp"
         android:layout_height="480dp"
-        app:layout_constraintVertical_bias="0.3"
+        app:layout_constraintVertical_bias="0.26"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -79,11 +79,11 @@
         android:id="@+id/open_gallery_button"
         android:src="@drawable/example_gallery_pic"
         android:background="@android:color/transparent"
-        android:layout_marginBottom="35dp"
         android:scaleType="fitXY"
-        app:layout_constraintBottom_toTopOf="@id/bottom_nav_bar"
+        app:layout_constraintTop_toTopOf="@id/recordCircle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/recordCircle"
+        app:layout_constraintBottom_toBottomOf="@id/recordCircle"
         android:contentDescription="@string/open_gallery" />
 
 <!--    <ImageButton-->
@@ -104,6 +104,7 @@
         android:id="@+id/recordCircle"
         android:layout_width="110dp"
         android:layout_height="110dp"
+        android:layout_marginBottom="20dp"
         app:layout_constraintBottom_toTopOf="@id/bottom_nav_bar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
@@ -127,12 +128,12 @@
         android:id="@+id/flip_camera_button"
         android:src="@drawable/outline_flip_camera_android_24"
         android:background="@android:color/transparent"
-        android:layout_marginBottom="50dp"
         android:scaleType="fitXY"
         app:tint="@color/white"
-        app:layout_constraintBottom_toTopOf="@id/bottom_nav_bar"
-        app:layout_constraintStart_toEndOf="@id/recordCircle"
+        app:layout_constraintTop_toTopOf="@id/recordCircle"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/recordCircle"
+        app:layout_constraintStart_toEndOf="@id/recordCircle"
         android:contentDescription="@string/flip_camera" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
