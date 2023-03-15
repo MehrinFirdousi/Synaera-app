@@ -1,17 +1,11 @@
 package com.example.synaera
 
 import android.Manifest
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
-import android.animation.AnimatorSet
-import android.animation.ObjectAnimator
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Matrix
-import android.graphics.Point
-import android.graphics.Rect
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
@@ -19,9 +13,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.util.DisplayMetrics
 import android.util.Log
-import android.util.TypedValue
 import android.view.View
-import android.view.animation.DecelerateInterpolator
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -31,22 +23,18 @@ import androidx.camera.view.PreviewView
 import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.LifecycleOwner
-import androidx.transition.ChangeBounds
-import androidx.transition.TransitionManager
-import androidx.transition.TransitionSet
 import androidx.viewpager2.widget.ViewPager2
 import com.example.synaera.databinding.ActivityMainBinding
 import com.google.common.util.concurrent.ListenableFuture
-import okhttp3.OkHttpClient
 import java.io.*
 import java.nio.ByteBuffer
 import java.util.*
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import kotlin.collections.ArrayList
+import kotlin.math.roundToInt
 
 
 typealias ServListener = (serv: Int) -> Unit
@@ -86,13 +74,11 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
     private lateinit var handler: Handler
     private var runnable: Runnable? = null
 
-    private var i = 0
-    private val al: ArrayList<Int> = ArrayList()
-    private val al2: ArrayList<Int> = ArrayList()
-    private var currentAnimator: AnimatorSet? = null
-    private var settingPopupVisibilityDuration = 0
 
+    private var recordAnimation: ButtonAnimator = ButtonAnimator()
     private val executorService: ExecutorService = Executors.newSingleThreadExecutor()
+
+    private var bottomNavWidth: Int = 0
 
     //    var filesFragment = FilesFragment()
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -211,9 +197,9 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                     circleView.getmMinRadius(),
                     circleView.getmMinStroke()
                 )
-                stopAnimationOfSquare()
+                recordAnimation.stopAnimationOfSquare(resources, recordButton)
                 handler.removeCallbacks(runnable!!)
-                resetAnimation()
+                recordAnimation.resetAnimation(circleView)
             }
             if (cameraFacing == CameraSelector.LENS_FACING_FRONT)
                 cameraFacing = CameraSelector.LENS_FACING_BACK
@@ -224,14 +210,9 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
         cameraExecutor = Executors.newSingleThreadExecutor()
 
-        // ------------------------------- animate record button -------------------------------
-        // ------------------------------- animate record button -------------------------------
-        // ------------------------------- animate record button -------------------------------
-        // ------------------------------- animate record button -------------------------------
-        // ------------------------------- animate record button -------------------------------
-
         circleView = viewBinding.recordCircle
         recordButton = viewBinding.recordButton
+        bottomNavWidth = viewBinding.bottomNavBar.width
 
         circleView.setOnClickListener {
             viewBinding.openGalleryButton.visibility = View.VISIBLE;
@@ -242,13 +223,15 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                 } else {
                     startCameraImageAnalysis()
                 }
-                startAnimationOfSquare()
+                recordAnimation.startAnimationOfSquare(resources, circleView, recordButton)
                 circleView.animateRadius(
                     circleView.getmMaxRadius(),
                     circleView.getmMinStroke()
                 )
                 handler.postDelayed(runnable!!, 80)
-//                viewBinding.bottomNavBar.visibility = View.INVISIBLE
+                viewBinding.bottomNavBar.updateLayoutParams {
+                    height = dpToPx(1)
+                }
                 viewBinding.openGalleryButton.visibility = View.INVISIBLE
                 viewBinding.flipCameraButton.visibility = View.INVISIBLE
                 viewBinding.infoButton.visibility = View.INVISIBLE
@@ -264,10 +247,14 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                     circleView.getmMinRadius(),
                     circleView.getmMinStroke()
                 )
-                stopAnimationOfSquare()
+                recordAnimation.stopAnimationOfSquare(resources, recordButton)
                 handler.removeCallbacks(runnable!!)
-                resetAnimation()
+                recordAnimation.resetAnimation(circleView)
 //                viewBinding.bottomNavBar.visibility = View.VISIBLE
+//                viewBinding.bottomNavBar.layoutParams = ConstraintLayout.LayoutParams(bottomNavWidth, 55)
+                viewBinding.bottomNavBar.updateLayoutParams {
+                    height = dpToPx(55)
+                }
                 viewBinding.openGalleryButton.visibility = View.VISIBLE
                 viewBinding.flipCameraButton.visibility = View.VISIBLE
                 viewBinding.infoButton.visibility = View.VISIBLE
@@ -276,36 +263,16 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
             translationOngoing = !translationOngoing
         }
 
-        resetAnimation()
+        recordAnimation.resetAnimation(circleView)
+
 
         handler = Handler()
         runnable = Runnable {
-
-            //to make smooth stroke width animation I increase and decrease value step by step
-            val random: Int
-            if (al.isNotEmpty()) {
-                random = al[i++]
-                if (i >= al.size) {
-                    for (j in al.indices.reversed()) {
-                        al2.add(al[j])
-                    }
-                    al.clear()
-                    i = 0
-                }
-            } else {
-                random = al2[i++]
-                if (i >= al2.size) {
-                    for (j in al2.indices.reversed()) {
-                        al.add(al2[j])
-                    }
-                    al2.clear()
-                    i = 0
-                }
-            }
-            circleView.animateRadius(circleView.getmMaxRadius(), random.toFloat())
+            recordAnimation.animateStroke(circleView)
             handler.postDelayed(runnable!!, 130)
         }
     }
+
     override fun onResume() {
         Log.d(TAG, "onResume")
         super.onResume()
@@ -320,105 +287,10 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 //        mServer!!.disconnect()
     }
 
-    private fun resetAnimation() {
-        i = 0
-        al.clear()
-        al2.clear()
-        al.add(25)
-        al.add(30)
-        al.add(35)
-        al.add(40)
-        al.add(45)
-//        al.add(50);
-//        al.add(55);
-//        al.add(60);
-        circleView.endAnimation()
+    fun dpToPx(dp: Int): Int {
+        val density: Float = resources.displayMetrics.density
+        return (dp.toFloat() * density).roundToInt()
     }
-
-    private fun dpToPx(valueInDp: Float): Int {
-        val metrics = resources.displayMetrics
-        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, valueInDp, metrics).toInt()
-    }
-
-    private fun startAnimationOfSquare() {
-        settingPopupVisibilityDuration =
-            resources.getInteger(android.R.integer.config_shortAnimTime)
-        currentAnimator?.cancel()
-        val finalBounds = Rect()
-        val globalOffset = Point()
-        circleView.getGlobalVisibleRect(finalBounds, globalOffset)
-        recordButton.let {
-            TransitionManager.beginDelayedTransition(
-                it, TransitionSet()
-                    .addTransition(ChangeBounds()).setDuration(settingPopupVisibilityDuration.toLong())
-            )
-        }
-        val params = recordButton.layoutParams
-        params.height = dpToPx(40F)
-        params.width = dpToPx(40F)
-        recordButton.layoutParams = params
-        val set = AnimatorSet()
-        set.play(ObjectAnimator.ofFloat(recordButton, "radius", dpToPx(8F).toFloat()))
-        set.duration = settingPopupVisibilityDuration.toLong()
-        set.interpolator = DecelerateInterpolator()
-        set.addListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: Animator) {
-                finishAnimation()
-            }
-
-            override fun onAnimationCancel(animation: Animator) {
-                finishAnimation()
-            }
-
-            private fun finishAnimation() {
-                currentAnimator = null
-            }
-        })
-        set.start()
-        currentAnimator = set
-    }
-
-    private fun stopAnimationOfSquare() {
-        if (currentAnimator != null) {
-            currentAnimator!!.cancel()
-        }
-        recordButton.let {
-            TransitionManager.beginDelayedTransition(
-                it, TransitionSet()
-                    .addTransition(ChangeBounds()).setDuration(settingPopupVisibilityDuration.toLong())
-            )
-        }
-        val params = recordButton.layoutParams
-        params.width = dpToPx(80F)
-        params.height = dpToPx(80F)
-        recordButton.layoutParams = params
-        val set1 = AnimatorSet()
-        set1.play(
-            ObjectAnimator.ofFloat(
-                recordButton,
-                "radius",
-                dpToPx(40F).toFloat()
-            )
-        ) //radius = height/2 to make it round
-        set1.duration = settingPopupVisibilityDuration.toLong()
-        set1.interpolator = DecelerateInterpolator()
-        set1.addListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: Animator) {
-                finishAnimation()
-            }
-
-            override fun onAnimationCancel(animation: Animator) {
-                finishAnimation()
-            }
-
-            private fun finishAnimation() {
-                currentAnimator = null
-            }
-        })
-        set1.start()
-        currentAnimator = set1
-    }
-
     fun convertVideoToBytes(uri: Uri?): ByteArray? {
         var videoBytes: ByteArray? = null
         try {
@@ -520,7 +392,6 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
     }
 
     private fun disableCameraButtons() {
-//        viewBinding.startCaptureButton.visibility = View.INVISIBLE;
         circleView.visibility = View.INVISIBLE
         recordButton.visibility = View.INVISIBLE
         viewBinding.openGalleryButton.visibility = View.INVISIBLE;
@@ -531,7 +402,6 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
     }
 
     private fun enableCameraButtons() {
-//        viewBinding.startCaptureButton.visibility = View.VISIBLE;
         circleView.visibility = View.VISIBLE;
         recordButton.visibility = View.VISIBLE;
         viewBinding.openGalleryButton.visibility = View.VISIBLE;
@@ -655,7 +525,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                     // This its a better camera stream but the conversion might create artifacts with
                     // some cameras. Needs more investigation
                     val byteArray: ByteArray = ImageConverter.YUV_420_800toJPEG(image)
-                    mServer?.sendImage(byteArray)
+                    mServer.sendImage(byteArray)
                     mLastTime = System.currentTimeMillis()
                 }
                 image.close()
@@ -679,6 +549,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
             } catch (e: InterruptedException) {
             }
         }, ContextCompat.getMainExecutor(this))
+        mServer.getPrediction()
     }
 
     private fun startStreaming() {
@@ -700,6 +571,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
     private fun stopStreaming() {
         mIsStreaming = false
+        mServer.getPrediction()
     }
 
     override fun onConnected(success: Boolean) {
@@ -720,7 +592,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         }
     }
 
-    fun fromBufferToBitmap(buffer: ByteBuffer, width: Int, height: Int): Bitmap? {
+    private fun fromBufferToBitmap(buffer: ByteBuffer, width: Int, height: Int): Bitmap? {
         val result = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         buffer.rewind()
         result.copyPixelsFromBuffer(buffer)
@@ -730,16 +602,15 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         return outputBitmap
     }
     override fun onCurrentFrameExtracted(currentFrame: Frame) {
-        val startSavingTime = System.currentTimeMillis()
-        // 1. Convert frame byte buffer to bitmap
+//        Thread {
+            // 1. Convert frame byte buffer to bitmap
         val imageBitmap = fromBufferToBitmap(currentFrame.byteBuffer, currentFrame.width, currentFrame.height)
-//        val imageBitmap = fromBufferToBitmap(currentFrame.byteBuffer, 640, 480)
-        Log.d(TAG, "len of current frame "+currentFrame.byteBuffer.position().toString())
         val byteArray = ImageConverter.BitmaptoJPEG(imageBitmap)
         val len = byteArray.size
         Log.d(TAG, "frame len is $len")
         mServer.sendImage(byteArray)
         mLastTime = System.currentTimeMillis()
+//        }.start()
 
         /*// 2. Get the frame file in app external file directory
         val allFrameFileFolder = File(this.getExternalFilesDir(null), UUID.randomUUID().toString())

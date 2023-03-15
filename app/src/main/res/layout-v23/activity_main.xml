@@ -102,16 +102,16 @@
 
     <com.example.synaera.CircleView
         android:id="@+id/recordCircle"
-        android:layout_width="120dp"
-        android:layout_height="120dp"
+        android:layout_width="110dp"
+        android:layout_height="110dp"
         app:layout_constraintBottom_toTopOf="@id/bottom_nav_bar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
     <androidx.cardview.widget.CardView
         android:id="@+id/recordButton"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
         app:cardBackgroundColor="@color/recordRed"
         app:cardCornerRadius="40dp"
         app:cardElevation="0dp"

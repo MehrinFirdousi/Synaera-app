@@ -12,6 +12,7 @@ import java.nio.ByteBuffer;
 import java.nio.ReadOnlyBufferException;
 
 public class ImageConverter {
+
     public static byte[] BitmaptoJPEG(Bitmap image) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         image.compress(Bitmap.CompressFormat.JPEG, 100, stream);

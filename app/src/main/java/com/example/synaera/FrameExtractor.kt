@@ -67,10 +67,10 @@ class FrameExtractor (private val listener: IVideoFrameExtractor) {
 
             // We must set MAX_FRAMES for decode
             val FPS = 30
-            if (frameCount == Int.MAX_VALUE) {
-                MAX_FRAMES = FPS * duration!!.toInt() / 1000
+            MAX_FRAMES = if (frameCount == Int.MAX_VALUE) {
+                FPS * duration!!.toInt() / 1000
             } else {
-                MAX_FRAMES = frameCount
+                frameCount
             }
             height = format.getInteger(MediaFormat.KEY_HEIGHT)
             width = format.getInteger(MediaFormat.KEY_WIDTH)

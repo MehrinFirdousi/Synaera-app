@@ -99,6 +99,13 @@ public class ServerClient {
         }
     }
 
+    public void getPrediction() {
+        if (mSocket != null && mSocket.connected()) {
+            mSocket.emit("stopRecord", EVENT_RESPONSE);
+        } else {
+            Log.d(TAG, "Cannot get prediction because socket is null or disconnected");
+        }
+    }
     /**
      * Client activities might issue an explicit disconnect at anytime.
      * <p>

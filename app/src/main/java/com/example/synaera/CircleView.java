@@ -54,7 +54,7 @@ public class CircleView extends View {
     }
 
     private void init() {
-        mMinRadius = dpToPx(getContext(), 45);
+        mMinRadius = dpToPx(getContext(), 40);
         mMinStroke = 15;
         mCurrentRadius = mMinRadius;
         mCurrentStroke = mMinStroke;
