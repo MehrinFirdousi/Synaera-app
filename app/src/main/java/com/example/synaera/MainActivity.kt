@@ -108,8 +108,8 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         chatList.add(ChatBubble("hi10", false))
 
         /** list for the videos*/
-        videoList.add(VideoItem("Video1", "Processing...", getDummyBitmap(10,10,123) ,"123"))
-        videoList.add(VideoItem("Video2", "View Transcript", getDummyBitmap(12,12,50) ,"123"))
+        videoList.add(VideoItem("Video1", "Processing...", getDummyBitmap(100,100,123) ,"123"))
+        videoList.add(VideoItem("Video2", "View Transcript", getDummyBitmap(120,120,50) ,"123"))
 
         chatFragment = ChatFragment.newInstance(chatList)
         filesFragment = FilesFragment.newInstance(videoList)

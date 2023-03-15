@@ -43,4 +43,10 @@ class FilesFragment() : Fragment() {
         mAdapter = VideoRecyclerAdapter(list)
         binding.videoRV.adapter = mAdapter
     }
+
+    fun addItem (item: VideoItem) {
+        list.add(item)
+        mAdapter.notifyItemInserted(list.size - 1)
+
+    }
 }
