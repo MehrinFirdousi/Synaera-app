@@ -7,7 +7,9 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Matrix
+import android.graphics.Paint
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
@@ -53,7 +55,9 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
     private var translationOngoing : Boolean = false
     private var cameraFacing : Int = CameraSelector.LENS_FACING_FRONT
     private var chatList = ArrayList<ChatBubble>()
+    private var videoList = ArrayList<VideoItem>()
     private lateinit var chatFragment: ChatFragment
+    private lateinit var filesFragment: FilesFragment
 
     private lateinit var mServer: ServerClient
     private lateinit var mCameraPreview: PreviewView
@@ -106,7 +110,12 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         //chatList.add(ChatBubble("Lorem ipsum dolor sit amet, et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum", true))
         chatList.add(ChatBubble("hi10", false))
 
+        /** list for the videos*/
+        videoList.add(VideoItem("Video1", "Processing...", getDummyBitmap(100,100,123) ,"123"))
+        videoList.add(VideoItem("Video2", "View Transcript", getDummyBitmap(120,120,50) ,"123"))
+
         chatFragment = ChatFragment.newInstance(chatList)
+        filesFragment = FilesFragment.newInstance(videoList)
 
         // Set up HTTP client
 //        client = OkHttpClient().newBuilder()
@@ -215,7 +224,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         bottomNavWidth = viewBinding.bottomNavBar.width
 
         circleView.setOnClickListener {
-            viewBinding.openGalleryButton.visibility = View.VISIBLE;
+            viewBinding.openGalleryButton.visibility = View.VISIBLE
 
             if (!translationOngoing) {
                 if (mStreamFromCameraPreview) {
@@ -409,27 +418,27 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
     private fun disableCameraButtons() {
         circleView.visibility = View.INVISIBLE
         recordButton.visibility = View.INVISIBLE
-        viewBinding.openGalleryButton.visibility = View.INVISIBLE;
-        viewBinding.flipCameraButton.visibility = View.INVISIBLE;
-        viewBinding.infoButton.visibility = View.INVISIBLE;
-        viewBinding.settingsButton.visibility = View.INVISIBLE;
-        viewBinding.textView.visibility = View.INVISIBLE;
+        viewBinding.openGalleryButton.visibility = View.INVISIBLE
+        viewBinding.flipCameraButton.visibility = View.INVISIBLE
+        viewBinding.infoButton.visibility = View.INVISIBLE
+        viewBinding.settingsButton.visibility = View.INVISIBLE
+        viewBinding.textView.visibility = View.INVISIBLE
     }
 
     private fun enableCameraButtons() {
-        circleView.visibility = View.VISIBLE;
-        recordButton.visibility = View.VISIBLE;
-        viewBinding.openGalleryButton.visibility = View.VISIBLE;
-        viewBinding.flipCameraButton.visibility = View.VISIBLE;
-        viewBinding.infoButton.visibility = View.VISIBLE;
-        viewBinding.settingsButton.visibility = View.VISIBLE;
-        viewBinding.textView.visibility = View.VISIBLE;
+        circleView.visibility = View.VISIBLE
+        recordButton.visibility = View.VISIBLE
+        viewBinding.openGalleryButton.visibility = View.VISIBLE
+        viewBinding.flipCameraButton.visibility = View.VISIBLE
+        viewBinding.infoButton.visibility = View.VISIBLE
+        viewBinding.settingsButton.visibility = View.VISIBLE
+        viewBinding.textView.visibility = View.VISIBLE
     }
 
     private fun setViewPagerAdapter() {
         val curItem = viewBinding.viewPager.currentItem
         Log.d(TAG, "current item in viewpager = $curItem")
-        viewBinding.viewPager.adapter = ViewPagerAdapter(this, chatFragment)
+        viewBinding.viewPager.adapter = ViewPagerAdapter(this, chatFragment, filesFragment)
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
@@ -652,5 +661,21 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
     override fun onAllFrameExtracted(processedFrameCount: Int, processedTimeMs: Long) {
         Log.d(TAG, "Save: $processedFrameCount frames in: $processedTimeMs ms.")
+    }
+
+    private fun getDummyBitmap(
+        targetWidth: Int, targetHeight: Int,
+        color: Int
+    ): Bitmap {
+        val bitmap = Bitmap.createBitmap(
+            targetWidth, targetHeight,
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+        val paint = Paint()
+        paint.isAntiAlias = true
+        paint.color = color
+        canvas.drawPaint(paint)
+        return bitmap
     }
 }
