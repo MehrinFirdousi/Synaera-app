@@ -49,4 +49,9 @@ class FilesFragment() : Fragment() {
         mAdapter.notifyItemInserted(list.size - 1)
 
     }
+
+    fun changeStatus(pos : Int, status : String) {
+        list[pos].status = status
+        mAdapter.notifyItemChanged(pos)
+    }
 }

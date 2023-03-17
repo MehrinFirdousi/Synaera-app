@@ -31,6 +31,7 @@
             android:layout_height="wrap_content"
             android:textStyle="bold"
             android:textSize="20sp"
+            android:textColor="@color/black"
             android:text="Video Title" />
 
         <TextView
@@ -38,6 +39,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
+            android:textColor="@color/black"
             android:text="Processing..." />
     </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>
