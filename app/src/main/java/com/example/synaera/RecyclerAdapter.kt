@@ -2,7 +2,6 @@ package com.example.synaera
 
 import android.content.Context
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
@@ -34,22 +33,28 @@ open class RecyclerAdapter(var items: ArrayList<ChatBubble>, val listener : (Cha
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val params = holder.binding.chatItemText.layoutParams as ConstraintLayout.LayoutParams
+        val chatParams = holder.binding.chatItemText.layoutParams as ConstraintLayout.LayoutParams
+        val editParams = holder.binding.editBttn.layoutParams as ConstraintLayout.LayoutParams
 
         val currItem = items[position]
         holder.binding.chatItemText.text = currItem.text
 
         holder.binding.chatItemText.setOnClickListener { listener(currItem, position) }
+        holder.binding.editBttn.setOnClickListener{ listener(currItem, position) }
 
         if (currItem.sender) {
-            params.startToStart = ConstraintLayout.LayoutParams.PARENT_ID
-            params.endToEnd = ConstraintLayout.LayoutParams.UNSET
+            chatParams.startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            chatParams.endToEnd = ConstraintLayout.LayoutParams.UNSET
             holder.binding.chatItemText.setBackgroundResource(R.drawable.other_message_bubble)
+            editParams.startToEnd = holder.binding.chatItemText.id
+            editParams.endToStart = ConstraintLayout.LayoutParams.UNSET
 //            holder.binding.chatItemText.setBackgroundColor(ContextCompat.getColor(context, R.color.charcoal))
         } else {
-            params.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
-            params.startToStart = ConstraintLayout.LayoutParams.UNSET
+            chatParams.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            chatParams.startToStart = ConstraintLayout.LayoutParams.UNSET
             holder.binding.chatItemText.setBackgroundResource(R.drawable.my_message_bubble)
+            editParams.endToStart = holder.binding.chatItemText.id
+            editParams.startToEnd = ConstraintLayout.LayoutParams.UNSET
         }
     }
 

@@ -18,7 +18,7 @@ class HomeFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         homeBinding = FragmentHomeBinding.inflate(inflater, container, false)
 
         val mainActivity = requireActivity() as MainActivity
@@ -57,5 +57,13 @@ class HomeFragment : Fragment() {
         fun newInstance() : HomeFragment {
             return HomeFragment()
         }
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val user = requireActivity().intent.extras?.getSerializable("user") as User
+        val welcome = "Welcome " + user.name
+        homeBinding.welcomeMsg.text = welcome
     }
 }

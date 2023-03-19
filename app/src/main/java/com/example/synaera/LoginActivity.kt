@@ -13,11 +13,19 @@ class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val binding = ActivityLoginBinding.inflate(layoutInflater)
+
+        val db = DatabaseHelper(this)
+
+        val loggedInUser = db.getLoggedIn()
+
+        if (loggedInUser.email != "") {
+            val intent = Intent(this, MainActivity::class.java)
+            intent.putExtra("user", loggedInUser)
+            startActivity(intent)
+            finish()
+        }
+
         setContentView(binding.root)
-
-        users = ArrayList()
-
-        users.add(User("Qusai", "qusai@gmail.com", "1"))
 
         binding.signupBttn.setOnClickListener{
             val intent = Intent(this, RegisterActivity::class.java)
@@ -28,9 +36,13 @@ class LoginActivity : AppCompatActivity() {
             val email = binding.emailEditText.text.toString()
             val password = binding.passwordEditText.text.toString()
 
+            users = db.getAllUsers()
+
             for (user in users) {
-                if (true || (email.equals(user.email, true) && password == user.password)) {
+                if (email.equals(user.email, true) && password == user.password) {
                     val intent = Intent(this, MainActivity::class.java)
+                    db.addLoggedInUser(user)
+                    intent.putExtra("user", user)
                     startActivity(intent)
                     finish()
                 }

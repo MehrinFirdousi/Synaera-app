@@ -11,8 +11,22 @@ class RegisterActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        val db = DatabaseHelper(this)
+
         val binding = ActivityRegisterBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        binding.signupBttn.setOnClickListener {
+            val email = binding.emailEditText.text.toString().trim()
+            val name = binding.nameEditText.text.toString().trim()
+            val password = binding.passwordEditText.text.toString()
+            val passwordConfirm = binding.confirmPasswordEditText.text.toString()
+
+            if (email != "" && name != "" && password != "" && passwordConfirm == password) {
+                db.addUser(User(email, name, password))
+                finish()
+            }
+        }
 
 
     }
