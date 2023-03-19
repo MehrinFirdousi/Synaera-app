@@ -1,6 +1,7 @@
 package com.example.synaera
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -48,5 +49,10 @@ class FilesFragment() : Fragment() {
         list.add(item)
         mAdapter.notifyItemInserted(list.size - 1)
 
+    }
+    fun changeStatus(status : String) {
+        val lastPos = binding.videoRV.adapter?.itemCount?.minus(1)
+        list[lastPos!!].status = status
+        mAdapter.notifyItemChanged(lastPos)
     }
 }

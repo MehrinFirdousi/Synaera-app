@@ -186,7 +186,7 @@ class FrameExtractor (private val listener: IVideoFrameExtractor) {
                     val inputBuf = decoderInputBuffers[inputBufIndex]
                     val len = inputBuf.remaining()
                     frameCount++
-                    Log.d(TAG, "got frame $frameCount, len = $len")
+                    Log.d(TAG, "Frame $frameCount extracted")
                     // Read the sample data into the ByteBuffer.  This neither respects nor
                     // updates inputBuf's position, limit, etc.
                     val chunkSize = extractor.readSampleData(inputBuf, 0)

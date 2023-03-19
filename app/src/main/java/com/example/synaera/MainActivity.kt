@@ -111,8 +111,8 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         chatList.add(ChatBubble("hi10", false))
 
         /** list for the videos*/
-        videoList.add(VideoItem("Video1", "Processing...", getDummyBitmap(100,100,123) ,"123"))
-        videoList.add(VideoItem("Video2", "View Transcript", getDummyBitmap(120,120,50) ,"123"))
+//        videoList.add(VideoItem("Video1", "Processing...", getDummyBitmap(100,100,123) ,"123"))
+//        videoList.add(VideoItem("Video2", "View Transcript", getDummyBitmap(120,120,50) ,"123"))
 
         chatFragment = ChatFragment.newInstance(chatList)
         filesFragment = FilesFragment.newInstance(videoList)
@@ -153,9 +153,9 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                     executorService.execute {
                         try {
                             frameExtractor.extractFrames(videoInputFile.absolutePath)
-                            this.runOnUiThread {
-                                filesFragment.addItem(VideoItem("Video3", "Process", videoThumbnail, "test"))
-                            }
+//                            this.runOnUiThread {
+//                                filesFragment.changeStatus("Extraction complete")
+//                            }
                         } catch (exception: Exception) {
                             exception.printStackTrace()
                             Log.d(TAG, "Failed!!!")
@@ -313,7 +313,6 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         animationSet.start()
     }
 
-
     fun dpToPx(dp: Int): Int {
         val density: Float = resources.displayMetrics.density
         return (dp.toFloat() * density).roundToInt()
@@ -377,12 +376,6 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
     private fun setBottomNavigation() {
         viewBinding.bottomNavBar.setOnItemSelectedListener {
-//            viewBinding.viewPager.currentItem = when(it.itemId) {
-//                R.id.gallery_menu_id -> 0
-//                R.id.camera_menu_id -> 1
-//                R.id.chat_menu_id -> 2
-//                else -> 1
-//            }
             when (it.itemId) {
                 R.id.home_menu_id -> {
                     viewBinding.viewPager.setCurrentItem(0, false)
@@ -562,7 +555,6 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         } else {
             CameraSelector.DEFAULT_BACK_CAMERA
         }
-//        val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
         cameraProvider.bindToLifecycle((this as LifecycleOwner), cameraSelector, mImageAnalysis)
     }
     private fun stopCameraImageAnalysis() {
@@ -619,6 +611,12 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         }
     }
 
+    override fun logResponse(result: String?) {
+        if (result != null) {
+            Log.d(TAG, result)
+        }
+    }
+
     private fun fromBufferToBitmap(buffer: ByteBuffer, width: Int, height: Int): Bitmap? {
         val result = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         buffer.rewind()
@@ -637,8 +635,12 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         videoFrames.add(byteArray)
 //        mServer.sendImage(byteArray)
 //        mLastTime = System.currentTimeMillis()
-        if (decodeCount == 0)
+        if (decodeCount == 0) {
             videoThumbnail = imageBitmap!!
+            this.runOnUiThread {
+                filesFragment.addItem(VideoItem("Video3", "Processing...", videoThumbnail, "test"))
+            }
+        }
 
 //        }.start()
 
@@ -666,9 +668,27 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
     }
 
     override fun onAllFrameExtracted(processedFrameCount: Int, processedTimeMs: Long) {
+        this.runOnUiThread {
+            filesFragment.changeStatus("Uploading...")
+        }
+        mIsStreaming = true
         Thread {
-            for (frame in videoFrames) {
-                mServer.sendImage(frame)
+            var frameNo = 0
+            while (mIsStreaming && frameNo < processedFrameCount) {
+                val elapsedTime: Long = System.currentTimeMillis() - mLastTime
+                if (elapsedTime > mUploadDelay && mUploadDelay != 0L) {   // Bound the image upload based on the user-defined frequency
+                    mServer.sendVideoFrame(videoFrames[frameNo++])
+                    mLastTime = System.currentTimeMillis()
+                    Log.d(TAG, "sending frame $frameNo")
+                }
+            }
+            println("suspending execution")
+            Thread.sleep(10000)
+            println("resuming execution")
+            mServer.getTranscript()
+            mIsStreaming = false
+            this.runOnUiThread {
+                filesFragment.changeStatus("View transcript")
             }
         }.start()
         Log.d(TAG, "Save: $processedFrameCount frames in: $processedTimeMs ms.")
