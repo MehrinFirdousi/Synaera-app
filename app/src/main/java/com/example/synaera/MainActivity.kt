@@ -29,6 +29,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.viewpager2.widget.ViewPager2
+import com.chaquo.python.PyObject
+import com.chaquo.python.Python
+import com.chaquo.python.android.AndroidPlatform
 import com.example.synaera.databinding.ActivityMainBinding
 import com.google.common.util.concurrent.ListenableFuture
 import java.io.*
@@ -90,6 +93,15 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         super.onCreate(savedInstanceState)
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
+
+        if (!Python.isStarted()) {
+            Python.start(AndroidPlatform(this))
+        }
+        var py: Python = Python.getInstance()
+        var pyObject: PyObject= py.getModule("script")
+
+        var obj: PyObject = pyObject.callAttr("main", "YOU WORK WHERE")
+        Log.d(TAG, "result is: "+obj.toString())
 
         mServer = ServerClient.getInstance()
         mServer.init("user", "pass", "20.193.159.90", 5000)
