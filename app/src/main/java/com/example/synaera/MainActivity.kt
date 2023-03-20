@@ -58,6 +58,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
     private var videoList = ArrayList<VideoItem>()
     private lateinit var chatFragment: ChatFragment
     private lateinit var filesFragment: FilesFragment
+    private lateinit var homeFragment: HomeFragment
 
     private lateinit var mServer: ServerClient
     private lateinit var mCameraPreview: PreviewView
@@ -116,6 +117,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
         chatFragment = ChatFragment.newInstance(chatList)
         filesFragment = FilesFragment.newInstance(videoList)
+        homeFragment = HomeFragment.newInstance()
 
         // Set up HTTP client
 //        client = OkHttpClient().newBuilder()
@@ -386,6 +388,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
             when (it.itemId) {
                 R.id.home_menu_id -> {
                     viewBinding.viewPager.setCurrentItem(0, false)
+                    homeFragment.updateName()
 //                    viewBinding.viewPager.currentItem = 0
                     disableCameraButtons()
                 }
@@ -441,7 +444,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
     private fun setViewPagerAdapter() {
         val curItem = viewBinding.viewPager.currentItem
         Log.d(TAG, "current item in viewpager = $curItem")
-        viewBinding.viewPager.adapter = ViewPagerAdapter(this, chatFragment, filesFragment)
+        viewBinding.viewPager.adapter = ViewPagerAdapter(this, chatFragment, filesFragment, homeFragment)
     }
 
     private fun allPermissionsGranted() = REQUIRED_PERMISSIONS.all {
