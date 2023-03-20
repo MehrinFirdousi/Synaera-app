@@ -53,6 +53,8 @@ class URIPathHelper {
                 return getDataColumn(context, contentUri, selection, selectionArgs)
             }
         } else if ("content".equals(uri.scheme, ignoreCase = true)) {
+            val uristring = uri.toString()
+            println("dis one $uristring\n")
             return getDataColumn(context, uri, null, null)
         } else if ("file".equals(uri.scheme, ignoreCase = true)) {
             return uri.path
@@ -66,6 +68,12 @@ class URIPathHelper {
         val projection = arrayOf(column)
         try {
             cursor = context.contentResolver.query(uri!!, projection, selection, selectionArgs, null)
+            println("selection is: $selection\n")
+            if (selectionArgs != null) {
+                for (select in selectionArgs) {
+                    print("select: $select\n")
+                }
+            }
             if (cursor != null && cursor.moveToFirst()) {
                 val columnIndex: Int = cursor.getColumnIndexOrThrow(column)
                 return cursor.getString(columnIndex)

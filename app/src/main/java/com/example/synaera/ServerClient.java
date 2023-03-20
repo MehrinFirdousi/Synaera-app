@@ -52,6 +52,7 @@ public class ServerClient {
                 options.reconnection = true;
                 options.reconnectionDelay = 5000;
                 options.reconnectionAttempts = 15;
+                options.timeout = 20000;
 //                options.timeout = 15000;
                 String serverAddress = "http://" + mServerIp + ":" + mServerPort;
                 mSocket = IO.socket(serverAddress, options);
@@ -104,29 +105,42 @@ public class ServerClient {
 
     public void sendVideoFrame(byte[] image) {
         boolean sent = false;
+        int attempts = 0;
 
-        while (!sent) {
+        while (!sent && attempts < 5) {
             if (mSocket != null && mSocket.connected()) {
                 mSocket.emit("receiveVideoStream", image);
                 sent = true;
             }
-            else
+            else {
                 Log.d(TAG, "Waiting for client to reconnect...");
+                attempts++;
+            }
+
+
         }
 //        else {
 //            Log.d(TAG, "Cannot send frame because socket is null or disconnected");
 //        }
     }
 
-    public void getTranscript() {
-        Log.d(TAG, "from getTranscript: emitting processVideo");
+    public void startTranscriptProcessing() {
+        Log.d(TAG, "from startTranscriptProcessing: emitting processVideo");
         if (mSocket != null && mSocket.connected()) {
-            mSocket.emit("processVideo", EVENT_TRANSCRIPT);
+            mSocket.emit("processVideo");
         } else {
             Log.d(TAG, "Cannot get transcript because socket is null or disconnected");
         }
     }
 
+    public void checkTranscript() {
+        Log.d(TAG, "from checkTranscript: emitting checkTranscript");
+        if (mSocket != null && mSocket.connected()) {
+            mSocket.emit("checkTranscript", EVENT_TRANSCRIPT);
+        } else {
+            Log.d(TAG, "Cannot check transcript because socket is null or disconnected");
+        }
+    }
     public void getPrediction() {
         if (mSocket != null && mSocket.connected()) {
             mSocket.emit("stopRecord", EVENT_RESPONSE);
@@ -134,6 +148,8 @@ public class ServerClient {
             Log.d(TAG, "Cannot get prediction because socket is null or disconnected");
         }
     }
+
+
     /**
      * Client activities might issue an explicit disconnect at anytime.
      * <p>
@@ -266,7 +282,7 @@ public class ServerClient {
         public void call(Object... args) {
             String result = (String)args[0];
             if (mSingleCallback != null)
-                mSingleCallback.logResponse(result);
+                mSingleCallback.addNewTranscript(result);
             Log.d(TAG, "onTranscriptGenerated: " + result);
         }
     };
