@@ -7,9 +7,7 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.graphics.Matrix
-import android.graphics.Paint
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
@@ -20,6 +18,7 @@ import android.util.Log
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
@@ -28,7 +27,6 @@ import androidx.camera.view.PreviewView
 import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.LifecycleOwner
 import androidx.viewpager2.widget.ViewPager2
 import com.example.synaera.databinding.ActivityMainBinding
@@ -40,9 +38,6 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.math.roundToInt
-
-
-typealias ServListener = (serv: Int) -> Unit
 
 class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtractor {
     private lateinit var viewBinding: ActivityMainBinding
@@ -62,9 +57,11 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
     private lateinit var mServer: ServerClient
     private lateinit var mCameraPreview: PreviewView
+    private lateinit var mCameraPreview2: PreviewView
 
     // Camera Use-Cases
     private var mPreview : Preview? = null
+    private var mPreview2 : Preview? = null
     private var mImageAnalysis: ImageAnalysis? = null
 
     private val mTargetWidth = 640
@@ -87,7 +84,8 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
     private lateinit var videoThumbnail: Bitmap
     private var videoFrames = ArrayList<ByteArray>()
-    //    var filesFragment = FilesFragment()
+    lateinit var selectVideoIntent : ActivityResultLauncher<Intent>
+    private var transcriptGenerated : Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,6 +97,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 //        mServer.init("user", "pass", "20.211.25.165", 5000)
         mServer.connect()
 
+        mCameraPreview2 = viewBinding.viewFinder2
         mCameraPreview = viewBinding.viewFinder
 
         /** sender = true for system, false for user */
@@ -112,8 +111,8 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         chatList.add(ChatBubble("hi10", false))
 
         /** list for the videos*/
-        videoList.add(VideoItem("Video1", "Processing...", getDummyBitmap(100,100,123) ,"123"))
-        videoList.add(VideoItem("Video2", "View Transcript", getDummyBitmap(120,120,50) ,"123"))
+//        videoList.add(VideoItem("Video1", "Processing...", getDummyBitmap(100,100,123) ,"123"))
+//        videoList.add(VideoItem("Video2", "View Transcript", getDummyBitmap(120,120,50) ,"123"))
 
         chatFragment = ChatFragment.newInstance(chatList)
         filesFragment = FilesFragment.newInstance(videoList)
@@ -129,7 +128,9 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
         // Request camera permissions
         if (allPermissionsGranted()) {
+            startCameraPreview2()
             startCameraPreview()
+//            setThumbnailRecentVideo()
         } else {
             ActivityCompat.requestPermissions(
                 this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
@@ -142,7 +143,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 //        viewBinding.bottomNavBar.selectedItemId = R.id.camera_menu_id
 
         // allow video selection from gallery
-        val selectVideoIntent = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        selectVideoIntent = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val data: Intent? = result.data
                 val dataUri = data?.data
@@ -150,14 +151,15 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                     val uriPathHelper = URIPathHelper()
                     val videoInputPath = uriPathHelper.getPath(this, dataUri).toString()
                     val videoInputFile = File(videoInputPath)
+//                    setThumbnailRecentVideo()
                     Log.d(TAG, "videoInputPath=$videoInputPath")
                     val frameExtractor = FrameExtractor(this)
                     executorService.execute {
                         try {
                             frameExtractor.extractFrames(videoInputFile.absolutePath)
-                            this.runOnUiThread {
-                                filesFragment.addItem(VideoItem("Video3", "Process", videoThumbnail, "test"))
-                            }
+//                            this.runOnUiThread {
+//                                filesFragment.changeStatus("Extraction complete")
+//                            }
                         } catch (exception: Exception) {
                             exception.printStackTrace()
                             Log.d(TAG, "Failed!!!")
@@ -220,6 +222,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                 cameraFacing = CameraSelector.LENS_FACING_BACK
             else
                 cameraFacing = CameraSelector.LENS_FACING_FRONT
+            startCameraPreview2()
             startCameraPreview()
         }
 
@@ -244,9 +247,6 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                 )
                 handler.postDelayed(runnable!!, 80)
                 slideView(viewBinding.bottomNavBar, viewBinding.bottomNavBar.layoutParams.height, 1)
-//                viewBinding.bottomNavBar.updateLayoutParams {
-//                    height = dpToPx(1)
-//                }
                 viewBinding.openGalleryButton.visibility = View.INVISIBLE
                 viewBinding.flipCameraButton.visibility = View.INVISIBLE
                 viewBinding.infoButton.visibility = View.INVISIBLE
@@ -266,9 +266,6 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                 handler.removeCallbacks(runnable!!)
                 recordAnimation.resetAnimation(circleView)
                 slideView(viewBinding.bottomNavBar, 1, dpToPx(55))
-//                viewBinding.bottomNavBar.updateLayoutParams {
-//                    height = dpToPx(55)
-//                }
                 viewBinding.openGalleryButton.visibility = View.VISIBLE
                 viewBinding.flipCameraButton.visibility = View.VISIBLE
                 viewBinding.infoButton.visibility = View.VISIBLE
@@ -292,6 +289,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         super.onResume()
         mServer.registerCallback(this)
         mServer.connect()
+//        setThumbnailRecentVideo()
     }
     override fun onPause() {
         Log.d(TAG, "onPause")
@@ -314,7 +312,6 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         animationSet.play(slideAnimator)
         animationSet.start()
     }
-
 
     fun dpToPx(dp: Int): Int {
         val density: Float = resources.displayMetrics.density
@@ -361,6 +358,45 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         }
         return frames
     }
+
+    private fun setThumbnailRecentVideo() {
+        /*
+        val projection = arrayOf(MediaStore.Video.Media._ID)
+
+        val uri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+        val path = URIPathHelper().getPath(this, uri).toString()
+        Log.d(TAG, "uripath is $path")
+        val cursor = this.contentResolver.query(
+            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+            projection,
+            "1000000063",
+            null,
+            "${MediaStore.Video.Media.DATE_TAKEN} DESC"
+        )
+
+        if (cursor != null && cursor.moveToFirst()) {
+            val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID))
+            val thumbnail = MediaStore.Video.Thumbnails.getThumbnail(
+                this.contentResolver,
+                id,
+                MediaStore.Video.Thumbnails.MINI_KIND,
+                null
+            )
+            cursor.close()
+            viewBinding.openGalleryButton.setImageBitmap(thumbnail)
+            Log.d(TAG, "set new image!!!")
+            // use the thumbnail here
+        }
+        else {
+            Log.d(TAG, "could not set thumbnail :(")
+            if (cursor == null)
+                Log.d(TAG, "could not set thumbnail, cursor is null")
+            else if (!cursor.moveToFirst())
+                Log.d(TAG, "could not set thumbnail, cursor cannot move to first")
+        }*/
+
+    }
+
     private fun setViewPagerListener() {
         viewBinding.viewPager.registerOnPageChangeCallback(object: ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
@@ -379,12 +415,6 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
     private fun setBottomNavigation() {
         viewBinding.bottomNavBar.setOnItemSelectedListener {
-//            viewBinding.viewPager.currentItem = when(it.itemId) {
-//                R.id.gallery_menu_id -> 0
-//                R.id.camera_menu_id -> 1
-//                R.id.chat_menu_id -> 2
-//                else -> 1
-//            }
             when (it.itemId) {
                 R.id.home_menu_id -> {
                     viewBinding.viewPager.setCurrentItem(0, false)
@@ -479,7 +509,9 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
+                startCameraPreview2()
                 startCameraPreview()
+//                setThumbnailRecentVideo()
             } else {
                 Toast.makeText(this,
                     "Permissions not granted by the user.",
@@ -497,6 +529,21 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
             try {
                 val cameraProvider = cameraProviderFuture.get()
                 bindPreview(cameraProvider)
+            } catch (e: ExecutionException) {
+                // do nothing
+            } catch (_: InterruptedException) {
+            }
+        }, ContextCompat.getMainExecutor(this))
+    }
+
+    private fun startCameraPreview2() {
+        Log.d(TAG, "startCameraPreview")
+        val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> =
+            ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
+            try {
+                val cameraProvider = cameraProviderFuture.get()
+                bindPreview2(cameraProvider)
             } catch (e: ExecutionException) {
                 // do nothing
             } catch (_: InterruptedException) {
@@ -535,6 +582,25 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 //        val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
         cameraProvider.bindToLifecycle(this as LifecycleOwner, cameraSelector, mPreview)
     }
+
+    private fun bindPreview2(cameraProvider: ProcessCameraProvider) {
+        mPreview2 = Preview.Builder().build()
+        // Preview use-case will render a preview image on the screen as defined by the PreviewView
+        // element on the main's layout activity. The resolution of the layout is relative to the
+        // screen size and defined in dp, which means the final resolution in pixels will be decided
+        // at run-time when the layout is inflated to the device screen. But will always be proportional
+        // to the resolution defined on the layout.
+
+        mPreview2!!.setSurfaceProvider(mCameraPreview2.createSurfaceProvider())
+        val cameraSelector: CameraSelector = if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
+            CameraSelector.DEFAULT_FRONT_CAMERA
+        } else {
+            CameraSelector.DEFAULT_BACK_CAMERA
+        }
+        cameraProvider.unbindAll()
+//        val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+        cameraProvider.bindToLifecycle(this as LifecycleOwner, cameraSelector, mPreview2)
+    }
     private fun bindImageAnalysis(cameraProvider: ProcessCameraProvider) {
         mImageAnalysis = ImageAnalysis.Builder()
 //            .setTargetResolution(Size(mTargetWidth, mTargetHeight))
@@ -565,7 +631,6 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         } else {
             CameraSelector.DEFAULT_BACK_CAMERA
         }
-//        val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
         cameraProvider.bindToLifecycle((this as LifecycleOwner), cameraSelector, mImageAnalysis)
     }
     private fun stopCameraImageAnalysis() {
@@ -622,6 +687,15 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         }
     }
 
+    override fun addNewTranscript(result: String?) {
+        if (result != null) {
+            Log.d(TAG, "result is $result")
+            if (result.isNotEmpty() || result.compareTo("") != 0)
+                transcriptGenerated = true
+        }
+
+    }
+
     private fun fromBufferToBitmap(buffer: ByteBuffer, width: Int, height: Int): Bitmap? {
         val result = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
         buffer.rewind()
@@ -638,10 +712,15 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         val byteArray = ImageConverter.BitmaptoJPEG(imageBitmap)
 
         videoFrames.add(byteArray)
-//        mServer.sendImage(byteArray)
+//        mServer.sendVideoFrame(byteArray)
 //        mLastTime = System.currentTimeMillis()
-        if (decodeCount == 0)
+        if (decodeCount == 0) {
             videoThumbnail = imageBitmap!!
+            this.runOnUiThread {
+                filesFragment.addItem(VideoItem("Video3", "Processing...", videoThumbnail, "test"))
+                viewBinding.openGalleryButton.setImageBitmap(videoThumbnail)
+            }
+        }
 
 //        }.start()
 
@@ -669,27 +748,46 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
     }
 
     override fun onAllFrameExtracted(processedFrameCount: Int, processedTimeMs: Long) {
+        this.runOnUiThread {
+            filesFragment.changeStatus("Uploading...")
+        }
+        mIsStreaming = true
         Thread {
-            for (frame in videoFrames) {
-                mServer.sendImage(frame)
+            var frameNo = 0
+            while (mIsStreaming && frameNo < processedFrameCount) {
+                val elapsedTime: Long = System.currentTimeMillis() - mLastTime
+                if (elapsedTime > mUploadDelay && mUploadDelay != 0L) {
+                    mServer.sendVideoFrame(videoFrames[frameNo++])
+                    mLastTime = System.currentTimeMillis()
+                    Log.d(TAG, "sending frame $frameNo")
+                }
             }
+            println("suspending execution")
+            Thread.sleep(15000)
+            println("resuming execution")
+
+            mServer.startTranscriptProcessing()
+            println("suspending execution")
+            Thread.sleep(30000)
+            println("resuming execution")
+
+            mServer.checkTranscript()
+            mLastTime = System.currentTimeMillis()
+            while (!transcriptGenerated) {
+                val elapsedTime: Long = System.currentTimeMillis() - mLastTime
+                if (elapsedTime > 100) {
+                    mServer.checkTranscript()
+                    mLastTime = System.currentTimeMillis()
+                    Log.d(TAG, "Checking for transcript...")
+                }
+            }
+//            mIsStreaming = false
+            this.runOnUiThread {
+                filesFragment.changeStatus("View transcript")
+            }
+            videoFrames.clear()
+            transcriptGenerated = false
         }.start()
         Log.d(TAG, "Save: $processedFrameCount frames in: $processedTimeMs ms.")
-    }
-
-    private fun getDummyBitmap(
-        targetWidth: Int, targetHeight: Int,
-        color: Int
-    ): Bitmap {
-        val bitmap = Bitmap.createBitmap(
-            targetWidth, targetHeight,
-            Bitmap.Config.ARGB_8888
-        )
-        val canvas = Canvas(bitmap)
-        val paint = Paint()
-        paint.isAntiAlias = true
-        paint.color = color
-        canvas.drawPaint(paint)
-        return bitmap
     }
 }

@@ -12,6 +12,8 @@ public class ServerClient {
 
     private static String EVENT_AUTHENTICATION = "onAuthentication";
     private static String EVENT_RESPONSE = "onResponse";
+
+    private static String EVENT_TRANSCRIPT = "onTranscriptGenerated";
     private Socket mSocket = null;
     private String mServerIp = "localhost";
     private int mServerPort = 8080;
@@ -50,6 +52,8 @@ public class ServerClient {
                 options.reconnection = true;
                 options.reconnectionDelay = 5000;
                 options.reconnectionAttempts = 15;
+                options.timeout = 20000;
+//                options.timeout = 15000;
                 String serverAddress = "http://" + mServerIp + ":" + mServerPort;
                 mSocket = IO.socket(serverAddress, options);
                 Log.d(TAG, "ServerClient initialized successfully.");
@@ -99,6 +103,44 @@ public class ServerClient {
         }
     }
 
+    public void sendVideoFrame(byte[] image) {
+        boolean sent = false;
+        int attempts = 0;
+
+        while (!sent && attempts < 5) {
+            if (mSocket != null && mSocket.connected()) {
+                mSocket.emit("receiveVideoStream", image);
+                sent = true;
+            }
+            else {
+                Log.d(TAG, "Waiting for client to reconnect...");
+                attempts++;
+            }
+
+
+        }
+//        else {
+//            Log.d(TAG, "Cannot send frame because socket is null or disconnected");
+//        }
+    }
+
+    public void startTranscriptProcessing() {
+        Log.d(TAG, "from startTranscriptProcessing: emitting processVideo");
+        if (mSocket != null && mSocket.connected()) {
+            mSocket.emit("processVideo");
+        } else {
+            Log.d(TAG, "Cannot get transcript because socket is null or disconnected");
+        }
+    }
+
+    public void checkTranscript() {
+        Log.d(TAG, "from checkTranscript: emitting checkTranscript");
+        if (mSocket != null && mSocket.connected()) {
+            mSocket.emit("checkTranscript", EVENT_TRANSCRIPT);
+        } else {
+            Log.d(TAG, "Cannot check transcript because socket is null or disconnected");
+        }
+    }
     public void getPrediction() {
         if (mSocket != null && mSocket.connected()) {
             mSocket.emit("stopRecord", EVENT_RESPONSE);
@@ -106,6 +148,8 @@ public class ServerClient {
             Log.d(TAG, "Cannot get prediction because socket is null or disconnected");
         }
     }
+
+
     /**
      * Client activities might issue an explicit disconnect at anytime.
      * <p>
@@ -113,6 +157,7 @@ public class ServerClient {
      */
     public void disconnect() {
         if (mSocket != null) {
+            Log.d(TAG, "randomly disconnected :(");
             mSocket.disconnect();
             unregisterSocketListeners();
         } else {
@@ -122,13 +167,15 @@ public class ServerClient {
 
     private void registerSocketListeners() {
         if (mSocket != null) {
-            mSocket.on(Socket.EVENT_CONNECT, onConneted);
+            mSocket.on(Socket.EVENT_CONNECT, onConnected);
             mSocket.on(Socket.EVENT_CONNECT_ERROR, onConnectionError);
             mSocket.on(Socket.EVENT_RECONNECT, onReconnecting);
             mSocket.on(Socket.EVENT_RECONNECT_ERROR, onReconnecting);
             mSocket.on(Socket.EVENT_DISCONNECT, onDisconnected);
             mSocket.on(EVENT_AUTHENTICATION, onAuthentication);
             mSocket.on(EVENT_RESPONSE, onResponse);
+            mSocket.on(EVENT_TRANSCRIPT, onTranscriptGenerated);
+            mSocket.on(Socket.EVENT_CONNECT_TIMEOUT, onTimeout);
             mSocket.on(Socket.EVENT_ERROR, onEventError);
         } else {
             Log.d(TAG, "Cannot register listeners because socket is null.");
@@ -137,13 +184,15 @@ public class ServerClient {
 
     private void unregisterSocketListeners() {
         if (mSocket != null) {
-            mSocket.off(Socket.EVENT_CONNECT, onConneted);
+            mSocket.off(Socket.EVENT_CONNECT, onConnected);
             mSocket.off(Socket.EVENT_CONNECT_ERROR, onConnectionError);
             mSocket.off(Socket.EVENT_RECONNECT, onReconnecting);
             mSocket.off(Socket.EVENT_RECONNECT_ERROR, onReconnecting);
             mSocket.off(Socket.EVENT_DISCONNECT, onDisconnected);
             mSocket.off(EVENT_AUTHENTICATION, onAuthentication);
             mSocket.off(EVENT_RESPONSE, onResponse);
+            mSocket.off(EVENT_TRANSCRIPT, onTranscriptGenerated);
+            mSocket.off(Socket.EVENT_CONNECT_TIMEOUT, onTimeout);
             mSocket.off(Socket.EVENT_ERROR, onEventError);
         } else {
             Log.d(TAG, "Cannot unregister listeners because socket is null.");
@@ -153,7 +202,7 @@ public class ServerClient {
     /**
      * Callback functions for the socket listeners
      */
-    private Emitter.Listener onConneted = new Emitter.Listener() {
+    private Emitter.Listener onConnected = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
             // We connected to the server successfully
@@ -225,6 +274,27 @@ public class ServerClient {
             if (mSingleCallback != null)
                 mSingleCallback.displayResponse(result);
             Log.d(TAG, "onResponse: " + result);
+        }
+    };
+
+    private Emitter.Listener onTranscriptGenerated = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            String result = (String)args[0];
+            if (mSingleCallback != null)
+                mSingleCallback.addNewTranscript(result);
+            Log.d(TAG, "onTranscriptGenerated: " + result);
+        }
+    };
+
+    private Emitter.Listener onTimeout = new Emitter.Listener() {
+        @Override
+        public void call(Object... args) {
+            String reason = "no reason receiveddd";
+            if (args.length > 0) {
+                reason = args[0].toString();
+            }
+            Log.d(TAG, "Connection timed out! Reason: " + reason);
         }
     };
 
