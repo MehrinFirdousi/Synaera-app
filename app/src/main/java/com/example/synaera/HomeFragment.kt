@@ -1,8 +1,6 @@
 package com.example.synaera
 
-import com.example.synaera.R
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,6 +13,8 @@ class HomeFragment : Fragment() {
 
     private lateinit var homeBinding: FragmentHomeBinding
     private lateinit var bottomNavigationView : BottomNavigationView
+    lateinit var db : DatabaseHelper
+    lateinit var user : User
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -49,6 +49,8 @@ class HomeFragment : Fragment() {
 //            .setBottomLeftCorner(CornerFamily.ROUNDED, 0f)
 //            .setBottomRightCorner(CornerFamily.ROUNDED, 0f)
 //            .build()
+
+        user = requireActivity().intent.extras!!.getSerializable("user") as User
         return homeBinding.root
     }
 
@@ -61,9 +63,14 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        db = DatabaseHelper(requireContext())
+        updateName()
+    }
 
-        val user = requireActivity().intent.extras?.getSerializable("user") as User
+    fun updateName() {
+        user = db.getUser(user.id)
         val welcome = "Welcome " + user.name
         homeBinding.welcomeMsg.text = welcome
     }
+
 }

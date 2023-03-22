@@ -23,7 +23,7 @@ class RegisterActivity : AppCompatActivity() {
             val passwordConfirm = binding.confirmPasswordEditText.text.toString()
 
             if (email != "" && name != "" && password != "" && passwordConfirm == password) {
-                db.addUser(User(email, name, password))
+                db.addUser(User(0, email, name, password))
                 finish()
             }
         }

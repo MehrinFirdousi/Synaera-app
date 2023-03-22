@@ -10,10 +10,12 @@ import android.database.sqlite.SQLiteOpenHelper
 open class DatabaseHelper(context: Context?) :
     SQLiteOpenHelper(context, DB_NAME, null, DB_VERSION) {
     override fun onCreate(db: SQLiteDatabase) {
-        db.execSQL("create table loggedin ($EMAIL TEXT NOT NULL PRIMARY KEY, $NAME TEXT NOT NULL, $PASSWORD TEXT NOT NULL);")
+        db.execSQL("create table loggedin ($EMAIL TEXT NOT NULL PRIMARY KEY, $NAME TEXT NOT NULL, $PASSWORD TEXT NOT NULL, id INTEGER NOT NULL);")
         db.execSQL(CREATE_TABLE)
 
         db.execSQL("INSERT INTO $TABLE_NAME ($EMAIL, $NAME, $PASSWORD) VALUES ('qusai061@gmail.com', 'Qusai', '1')")
+
+
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -27,6 +29,7 @@ open class DatabaseHelper(context: Context?) :
         const val TABLE_NAME = "COUNTRIES"
 
         // Table columns
+        const val ID = "rowid"
         const val EMAIL = "email"
         const val NAME = "name"
         const val PASSWORD = "password"
@@ -62,10 +65,17 @@ open class DatabaseHelper(context: Context?) :
         values.put(EMAIL, user.email)
         values.put(NAME, user.name)
         values.put(PASSWORD, user.password)
+        values.put("id", user.id)
 
         db.insert("loggedin", null, values)
         db.close()
 
+    }
+
+    open fun drop() {
+        val db = this.writableDatabase
+
+        onUpgrade(db, DB_VERSION, 1)
     }
 
     open fun getUser(email: String): User {
@@ -74,6 +84,7 @@ open class DatabaseHelper(context: Context?) :
         val cursor: Cursor? = db.query(
             TABLE_NAME,
             arrayOf(
+                ID,
                 EMAIL,
                 NAME, PASSWORD
             ),
@@ -85,7 +96,31 @@ open class DatabaseHelper(context: Context?) :
             null
         )
         cursor!!.moveToFirst()
-        val user = User(cursor.getString(0),cursor.getString(1), cursor.getString(2))
+        val user = User(cursor.getInt(0),cursor.getString(1), cursor.getString(2), cursor.getString(3))
+        cursor.close()
+        return user
+
+    }
+
+    open fun getUser(id: Int): User {
+        val db = this.readableDatabase
+
+        val cursor: Cursor? = db.query(
+            TABLE_NAME,
+            arrayOf(
+                ID,
+                EMAIL,
+                NAME, PASSWORD
+            ),
+            "$ID=?",
+            arrayOf(id.toString()),
+            null,
+            null,
+            null,
+            null
+        )
+        cursor!!.moveToFirst()
+        val user = User(cursor.getInt(0),cursor.getString(1), cursor.getString(2), cursor.getString(3))
         cursor.close()
         return user
 
@@ -94,15 +129,15 @@ open class DatabaseHelper(context: Context?) :
     fun getAllUsers() : ArrayList<User> {
         val userList = ArrayList<User>()
         // Select All Query
-        val selectQuery = "SELECT * FROM $TABLE_NAME"
+        val selectQuery = "SELECT $ID, $EMAIL, $NAME, $PASSWORD FROM $TABLE_NAME"
 
-        val db = this.writableDatabase;
-        val cursor = db.rawQuery(selectQuery, null);
+        val db = this.writableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
 
         if (cursor.moveToFirst()) {
             do {
-                val user = User(cursor.getString(0), cursor.getString(1),
-                    cursor.getString(2))
+                val user = User(cursor.getInt(0),cursor.getString(1), cursor.getString(2),
+                    cursor.getString(3))
 
                 userList.add(user)
             } while (cursor.moveToNext())
@@ -113,18 +148,18 @@ open class DatabaseHelper(context: Context?) :
     }
 
     fun getLoggedIn() : User {
-        var user = User ("", "" , "")
+        var user = User (0,"", "" , "")
         // Select All Query
         val selectQuery = "SELECT * FROM loggedin"
 
-        val db = this.writableDatabase;
-        val cursor = db.rawQuery(selectQuery, null);
+        val db = this.writableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
 
         if (cursor.moveToFirst()) {
 
             user = User(
-                cursor.getString(0), cursor.getString(1),
-                cursor.getString(2)
+                cursor.getInt(3), cursor.getString(0),
+                cursor.getString(1), cursor.getString(2)
             )
         }
 
@@ -132,19 +167,22 @@ open class DatabaseHelper(context: Context?) :
         return user
     }
 
-    open fun updateUser(user : User): Int {
+    open fun updateUser(user : User, id : Int) {
         val db = this.writableDatabase
         val values = ContentValues()
         values.put(NAME, user.name)
-        values.put(PASSWORD, user.password)
+        values.put(EMAIL, user.email)
 
         // updating row
-        return db.update(
+        db.update(
             TABLE_NAME,
             values,
-            "$EMAIL = ?",
-            arrayOf(user.email)
+            "$ID = ?",
+            arrayOf(id.toString())
         )
+
+        db.close()
+
     }
 
 
@@ -152,8 +190,8 @@ open class DatabaseHelper(context: Context?) :
         val db = this.writableDatabase
         db.delete(
             TABLE_NAME,
-            "$EMAIL = ?",
-            arrayOf(user.email)
+            "$ID = ?",
+            arrayOf(user.id.toString())
         )
         db.close()
     }

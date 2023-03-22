@@ -16,6 +16,7 @@ class LoginActivity : AppCompatActivity() {
 
         val db = DatabaseHelper(this)
 
+
         val loggedInUser = db.getLoggedIn()
 
         if (loggedInUser.email != "") {
