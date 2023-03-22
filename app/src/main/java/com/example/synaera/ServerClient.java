@@ -103,21 +103,19 @@ public class ServerClient {
         }
     }
 
-    public void sendVideoFrame(byte[] image) {
+    public void sendVideoFrame(byte[] image, int processedFrameCount) {
         boolean sent = false;
         int attempts = 0;
 
         while (!sent && attempts < 5) {
             if (mSocket != null && mSocket.connected()) {
-                mSocket.emit("receiveVideoStream", image);
+                mSocket.emit("receiveVideoStream", image, processedFrameCount);
                 sent = true;
             }
             else {
                 Log.d(TAG, "Waiting for client to reconnect...");
                 attempts++;
             }
-
-
         }
 //        else {
 //            Log.d(TAG, "Cannot send frame because socket is null or disconnected");

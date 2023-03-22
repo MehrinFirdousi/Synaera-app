@@ -56,11 +56,11 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
     private lateinit var mServer: ServerClient
     private lateinit var mCameraPreview: PreviewView
-    private lateinit var mCameraPreview2: PreviewView
+//    private lateinit var mCameraPreview2: PreviewView
 
     // Camera Use-Cases
     private var mPreview : Preview? = null
-    private var mPreview2 : Preview? = null
+//    private var mPreview2 : Preview? = null
     private var mImageAnalysis: ImageAnalysis? = null
 
     private val mTargetWidth = 640
@@ -96,7 +96,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 //        mServer.init("user", "pass", "20.211.25.165", 5000)
         mServer.connect()
 
-        mCameraPreview2 = viewBinding.viewFinder2
+//        mCameraPreview2 = viewBinding.viewFinder2
         mCameraPreview = viewBinding.viewFinder
 
         /** sender = true for system, false for user */
@@ -126,7 +126,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
         // Request camera permissions
         if (allPermissionsGranted()) {
-            startCameraPreview2()
+//            startCameraPreview2()
             startCameraPreview()
 //            setThumbnailRecentVideo()
         } else {
@@ -220,7 +220,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                 cameraFacing = CameraSelector.LENS_FACING_BACK
             else
                 cameraFacing = CameraSelector.LENS_FACING_FRONT
-            startCameraPreview2()
+//            startCameraPreview2()
             startCameraPreview()
         }
 
@@ -506,7 +506,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == REQUEST_CODE_PERMISSIONS) {
             if (allPermissionsGranted()) {
-                startCameraPreview2()
+//                startCameraPreview2()
                 startCameraPreview()
 //                setThumbnailRecentVideo()
             } else {
@@ -533,20 +533,20 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         }, ContextCompat.getMainExecutor(this))
     }
 
-    private fun startCameraPreview2() {
-        Log.d(TAG, "startCameraPreview")
-        val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> =
-            ProcessCameraProvider.getInstance(this)
-        cameraProviderFuture.addListener({
-            try {
-                val cameraProvider = cameraProviderFuture.get()
-                bindPreview2(cameraProvider)
-            } catch (e: ExecutionException) {
-                // do nothing
-            } catch (_: InterruptedException) {
-            }
-        }, ContextCompat.getMainExecutor(this))
-    }
+//    private fun startCameraPreview2() {
+//        Log.d(TAG, "startCameraPreview")
+//        val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> =
+//            ProcessCameraProvider.getInstance(this)
+//        cameraProviderFuture.addListener({
+//            try {
+//                val cameraProvider = cameraProviderFuture.get()
+//                bindPreview2(cameraProvider)
+//            } catch (e: ExecutionException) {
+//                // do nothing
+//            } catch (_: InterruptedException) {
+//            }
+//        }, ContextCompat.getMainExecutor(this))
+//    }
 
     private fun startCameraImageAnalysis() {
         Log.d(TAG, "startCameraPreview")
@@ -580,24 +580,24 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         cameraProvider.bindToLifecycle(this as LifecycleOwner, cameraSelector, mPreview)
     }
 
-    private fun bindPreview2(cameraProvider: ProcessCameraProvider) {
-        mPreview2 = Preview.Builder().build()
-        // Preview use-case will render a preview image on the screen as defined by the PreviewView
-        // element on the main's layout activity. The resolution of the layout is relative to the
-        // screen size and defined in dp, which means the final resolution in pixels will be decided
-        // at run-time when the layout is inflated to the device screen. But will always be proportional
-        // to the resolution defined on the layout.
-
-        mPreview2!!.setSurfaceProvider(mCameraPreview2.createSurfaceProvider())
-        val cameraSelector: CameraSelector = if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
-            CameraSelector.DEFAULT_FRONT_CAMERA
-        } else {
-            CameraSelector.DEFAULT_BACK_CAMERA
-        }
-        cameraProvider.unbindAll()
-//        val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-        cameraProvider.bindToLifecycle(this as LifecycleOwner, cameraSelector, mPreview2)
-    }
+//    private fun bindPreview2(cameraProvider: ProcessCameraProvider) {
+//        mPreview2 = Preview.Builder().build()
+//        // Preview use-case will render a preview image on the screen as defined by the PreviewView
+//        // element on the main's layout activity. The resolution of the layout is relative to the
+//        // screen size and defined in dp, which means the final resolution in pixels will be decided
+//        // at run-time when the layout is inflated to the device screen. But will always be proportional
+//        // to the resolution defined on the layout.
+//
+//        mPreview2!!.setSurfaceProvider(mCameraPreview2.createSurfaceProvider())
+//        val cameraSelector: CameraSelector = if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
+//            CameraSelector.DEFAULT_FRONT_CAMERA
+//        } else {
+//            CameraSelector.DEFAULT_BACK_CAMERA
+//        }
+//        cameraProvider.unbindAll()
+////        val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+//        cameraProvider.bindToLifecycle(this as LifecycleOwner, cameraSelector, mPreview2)
+//    }
     private fun bindImageAnalysis(cameraProvider: ProcessCameraProvider) {
         mImageAnalysis = ImageAnalysis.Builder()
 //            .setTargetResolution(Size(mTargetWidth, mTargetHeight))
@@ -754,7 +754,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
             while (mIsStreaming && frameNo < processedFrameCount) {
                 val elapsedTime: Long = System.currentTimeMillis() - mLastTime
                 if (elapsedTime > mUploadDelay && mUploadDelay != 0L) {
-                    mServer.sendVideoFrame(videoFrames[frameNo++])
+                    mServer.sendVideoFrame(videoFrames[frameNo++], processedFrameCount)
                     mLastTime = System.currentTimeMillis()
                     Log.d(TAG, "sending frame $frameNo")
                 }
