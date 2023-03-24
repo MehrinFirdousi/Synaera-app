@@ -51,6 +51,7 @@ class HomeFragment : Fragment() {
 //            .build()
 
         user = requireActivity().intent.extras!!.getSerializable("user") as User
+        db = DatabaseHelper(requireContext())
         return homeBinding.root
     }
 
@@ -63,8 +64,8 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        db = DatabaseHelper(requireContext())
-        updateName()
+        val welcome = "Welcome " + user.name
+        homeBinding.welcomeMsg.text = welcome
     }
 
     fun updateName() {
