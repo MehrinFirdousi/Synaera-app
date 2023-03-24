@@ -1,14 +1,16 @@
 package com.example.synaera
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.view.KeyEvent
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
+import android.view.inputmethod.InputMethod
+import android.view.inputmethod.InputMethodManager
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.content.ContextCompat.getSystemService
+import androidx.fragment.app.Fragment
 import com.example.synaera.databinding.FragmentProfileBinding
+
 
 class ProfileFragment : Fragment() {
 
@@ -42,6 +44,8 @@ class ProfileFragment : Fragment() {
         binding.emailValue.text = user.email
         binding.nameValue.text = user.name
 
+        val imm: InputMethodManager = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+
         binding.profileEditButton.setOnClickListener{
             binding.nameValue.visibility = View.GONE
             binding.emailValue.visibility = View.GONE
@@ -60,6 +64,10 @@ class ProfileFragment : Fragment() {
             nameParams.bottomToBottom = binding.editName.id
 
             binding.saveBttn.visibility = View.VISIBLE
+
+            if(binding.editName.requestFocus()){
+                imm.showSoftInput(binding.editName, InputMethodManager.SHOW_IMPLICIT)
+            }
         }
 
         binding.saveBttn.setOnClickListener{
@@ -86,6 +94,9 @@ class ProfileFragment : Fragment() {
             emailParams.bottomToBottom = binding.emailValue.id
             nameParams.topToTop = binding.nameLabel.id
             nameParams.bottomToBottom = binding.nameValue.id
+
+            imm.hideSoftInputFromWindow(binding.editEmail.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
+
         }
 
         binding.editEmail.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
