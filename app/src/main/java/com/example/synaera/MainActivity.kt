@@ -66,19 +66,15 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
     private val mTargetWidth = 640
     private val mTargetHeight = 480
-
     private var mLastTime: Long = 0
     private val mUploadDelay: Long = 100
-
     private var mIsStreaming = false
 
-    private val mStreamFromCameraPreview = true
-
+    private var isRealText = false
     private lateinit var circleView: CircleView
     private lateinit var recordButton: CardView
     private lateinit var handler: Handler
     private var runnable: Runnable? = null
-
     private var recordAnimation: ButtonAnimator = ButtonAnimator()
     private val executorService: ExecutorService = Executors.newSingleThreadExecutor()
 
@@ -103,12 +99,6 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         /** sender = true for system, false for user */
         chatList.add(ChatBubble("Hello", true))
         chatList.add(ChatBubble("hi", false))
-        chatList.add(ChatBubble("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum", false))
-        chatList.add(ChatBubble("hi", false))
-        chatList.add(ChatBubble("hi", false))
-        chatList.add(ChatBubble("bye", true))
-        //chatList.add(ChatBubble("Lorem ipsum dolor sit amet, et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum", true))
-        chatList.add(ChatBubble("hi10", false))
 
         /** list for the videos*/
 //        videoList.add(VideoItem("Video1", "Processing...", getDummyBitmap(100,100,123) ,"123"))
@@ -205,11 +195,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
         viewBinding.flipCameraButton.setOnClickListener {
             if (translationOngoing) {
-                if (mStreamFromCameraPreview) {
-                    stopStreaming()
-                } else {
-                    stopCameraImageAnalysis()
-                }
+                stopStreaming()
                 circleView.animateRadius(
                     circleView.getmMinRadius(),
                     circleView.getmMinStroke()
@@ -235,11 +221,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
             viewBinding.openGalleryButton.visibility = View.VISIBLE
 
             if (!translationOngoing) {
-                if (mStreamFromCameraPreview) {
-                    startStreaming()
-                } else {
-                    startCameraImageAnalysis()
-                }
+                startStreaming()
                 recordAnimation.startAnimationOfSquare(resources, circleView, recordButton)
                 circleView.animateRadius(
                     circleView.getmMaxRadius(),
@@ -253,11 +235,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                 viewBinding.settingsButton.visibility = View.INVISIBLE
             }
             else {
-                if (mStreamFromCameraPreview) {
-                    stopStreaming()
-                } else {
-                    stopCameraImageAnalysis()
-                }
+                stopStreaming()
                 circleView.animateRadius(
                     circleView.getmMinRadius(),
                     circleView.getmMinStroke()
@@ -400,13 +378,42 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
     private fun setViewPagerListener() {
         viewBinding.viewPager.registerOnPageChangeCallback(object: ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
-                viewBinding.bottomNavBar.selectedItemId = when(position) {
-                    0 ->  R.id.home_menu_id
-                    1 ->  R.id.gallery_menu_id
-                    2 ->  R.id.camera_menu_id
-                    3 ->  R.id.chat_menu_id
-                    4 ->  R.id.profile_menu_id
-                    else -> R.id.camera_menu_id
+//                viewBinding.bottomNavBar.selectedItemId = when(position) {
+//                    0 ->  R.id.home_menu_id
+//                    1 ->  R.id.gallery_menu_id
+//                    2 ->  R.id.camera_menu_id
+//                    3 ->  R.id.chat_menu_id
+//                    4 ->  R.id.profile_menu_id
+//                    else -> R.id.camera_menu_id
+//                }
+                when(position) {
+                    0 -> {
+                        viewBinding.viewPager.currentItem = 0
+                        homeFragment.updateName()
+                        disableCameraButtons()
+                        viewBinding.bottomNavBar.selectedItemId = R.id.home_menu_id
+                    }
+                    1 -> {
+                        viewBinding.viewPager.currentItem = 1
+                        disableCameraButtons()
+                        viewBinding.bottomNavBar.selectedItemId = R.id.gallery_menu_id
+                    }
+                    2 -> {
+                        viewBinding.viewPager.currentItem = 2
+                        enableCameraButtons()
+                        viewBinding.bottomNavBar.selectedItemId = R.id.camera_menu_id
+                    }
+                    3 -> {
+                        viewBinding.viewPager.currentItem = 3
+                        disableCameraButtons()
+                        viewBinding.bottomNavBar.selectedItemId = R.id.chat_menu_id
+                    }
+                    4 -> {
+                        viewBinding.viewPager.currentItem = 4
+                        disableCameraButtons()
+                        viewBinding.bottomNavBar.selectedItemId = R.id.profile_menu_id
+                    }
+                    else -> viewBinding.viewPager.currentItem = 2
                 }
                 super.onPageSelected(position)
             }
@@ -417,35 +424,36 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         viewBinding.bottomNavBar.setOnItemSelectedListener {
             when (it.itemId) {
                 R.id.home_menu_id -> {
-                    viewBinding.viewPager.setCurrentItem(0, false)
-                    homeFragment.updateName()
-//                    viewBinding.viewPager.currentItem = 0
-                    disableCameraButtons()
+                    if (viewBinding.viewPager.currentItem != 0) {
+                        viewBinding.viewPager.setCurrentItem(0, false)
+                        disableCameraButtons()
+                    }
                 }
                 R.id.gallery_menu_id -> {
-//                    supportFragmentManager.beginTransaction().replace(R.id.container, filesFragment).commit()
-                    viewBinding.viewPager.setCurrentItem(1, false)
-//                    viewBinding.viewPager.currentItem = 1
-                    disableCameraButtons()
+                    if (viewBinding.viewPager.currentItem != 1) {
+                        viewBinding.viewPager.setCurrentItem(1, false)
+                        disableCameraButtons()
+                    }
                 }
                 R.id.camera_menu_id -> {
-
-                    viewBinding.viewPager.setCurrentItem(2, false)
-//                    viewBinding.viewPager.currentItem = 2
-                    enableCameraButtons()
+                    if (viewBinding.viewPager.currentItem != 2) {
+                        viewBinding.viewPager.setCurrentItem(2, false)
+                        enableCameraButtons()
+                    }
                 }
                 R.id.chat_menu_id -> {
-                    viewBinding.viewPager.setCurrentItem(3, false)
-//                    viewBinding.viewPager.currentItem = 3
-                    disableCameraButtons()
+                    if (viewBinding.viewPager.currentItem != 3) {
+                        viewBinding.viewPager.setCurrentItem(3, false)
+                        disableCameraButtons()
+                    }
                 }
                 R.id.profile_menu_id -> {
-                    viewBinding.viewPager.setCurrentItem(4, false)
-//                    viewBinding.viewPager.currentItem = 4
-                    disableCameraButtons()
+                    if (viewBinding.viewPager.currentItem != 4) {
+                        viewBinding.viewPager.setCurrentItem(4, false)
+                        disableCameraButtons()
+                    }
                 }
                 else -> viewBinding.viewPager.currentItem = 2
-//                else -> viewBinding.viewPager.setCurrentItem(2, false)
             }
             return@setOnItemSelectedListener true
         }
@@ -468,7 +476,8 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         viewBinding.flipCameraButton.visibility = View.VISIBLE
         viewBinding.infoButton.visibility = View.VISIBLE
         viewBinding.settingsButton.visibility = View.VISIBLE
-        viewBinding.textView.visibility = View.VISIBLE
+        if (viewBinding.textView.text.isNotEmpty())
+            viewBinding.textView.visibility = View.VISIBLE
     }
 
     private fun setViewPagerAdapter() {
@@ -551,26 +560,8 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 //        }, ContextCompat.getMainExecutor(this))
 //    }
 
-    private fun startCameraImageAnalysis() {
-        Log.d(TAG, "startCameraPreview")
-        val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> = ProcessCameraProvider.getInstance(this)
-        cameraProviderFuture.addListener({
-            try {
-                val cameraProvider = cameraProviderFuture.get()
-                bindImageAnalysis(cameraProvider) // The stream will start after the bind
-            } catch (e: ExecutionException) {
-            } catch (e: InterruptedException) {
-            }
-        }, ContextCompat.getMainExecutor(this))
-    }
-
     private fun bindPreview(cameraProvider: ProcessCameraProvider) {
         mPreview = Preview.Builder().build()
-        // Preview use-case will render a preview image on the screen as defined by the PreviewView
-        // element on the main's layout activity. The resolution of the layout is relative to the
-        // screen size and defined in dp, which means the final resolution in pixels will be decided
-        // at run-time when the layout is inflated to the device screen. But will always be proportional
-        // to the resolution defined on the layout.
 
         mPreview!!.setSurfaceProvider(mCameraPreview.createSurfaceProvider())
         val cameraSelector: CameraSelector = if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
@@ -585,11 +576,6 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
 //    private fun bindPreview2(cameraProvider: ProcessCameraProvider) {
 //        mPreview2 = Preview.Builder().build()
-//        // Preview use-case will render a preview image on the screen as defined by the PreviewView
-//        // element on the main's layout activity. The resolution of the layout is relative to the
-//        // screen size and defined in dp, which means the final resolution in pixels will be decided
-//        // at run-time when the layout is inflated to the device screen. But will always be proportional
-//        // to the resolution defined on the layout.
 //
 //        mPreview2!!.setSurfaceProvider(mCameraPreview2.createSurfaceProvider())
 //        val cameraSelector: CameraSelector = if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
@@ -601,54 +587,11 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 ////        val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
 //        cameraProvider.bindToLifecycle(this as LifecycleOwner, cameraSelector, mPreview2)
 //    }
-    private fun bindImageAnalysis(cameraProvider: ProcessCameraProvider) {
-        mImageAnalysis = ImageAnalysis.Builder()
-//            .setTargetResolution(Size(mTargetWidth, mTargetHeight))
-//            .setTargetAspectRatio(AspectRatio.RATIO_4_3)
-            .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST) // non blocking
-            .build()
-
-        // Image Analysis use-case will not render the image on the screen, but will
-        // deliver a frame by frame image (stream) directly from the camera buffer to the analyser.
-        // In this case we can set an actual target resolution as defined by the user. CameraX will
-        // try to match the captured resolution to the target resolution. If it cannot match, will
-        // capture the frame with the resolution immediately above.
-        mImageAnalysis!!.setAnalyzer(
-            Executors.newFixedThreadPool(3),
-            ImageAnalysis.Analyzer { image: ImageProxy ->
-                val elapsedTime: Long = System.currentTimeMillis() - mLastTime
-                if (elapsedTime > mUploadDelay && mUploadDelay != 0L) {   // Bound the image upload based on the user-defined frequency
-                    // This its a better camera stream but the conversion might create artifacts with
-                    // some cameras. Needs more investigation
-                    val byteArray: ByteArray = ImageConverter.YUV_420_800toJPEG(image)
-                    mServer.sendImage(byteArray)
-                    mLastTime = System.currentTimeMillis()
-                }
-                image.close()
-            })
-        val cameraSelector: CameraSelector = if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
-            CameraSelector.DEFAULT_FRONT_CAMERA
-        } else {
-            CameraSelector.DEFAULT_BACK_CAMERA
-        }
-        cameraProvider.bindToLifecycle((this as LifecycleOwner), cameraSelector, mImageAnalysis)
-    }
-    private fun stopCameraImageAnalysis() {
-        val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> = ProcessCameraProvider.getInstance(this)
-        cameraProviderFuture.addListener({
-            try {
-                val cameraProvider = cameraProviderFuture.get()
-                cameraProvider.unbind(mImageAnalysis) // The stream will stop after the unbind
-            } catch (e: ExecutionException) {
-                // do nothing
-            } catch (e: InterruptedException) {
-            }
-        }, ContextCompat.getMainExecutor(this))
-        mServer.getPrediction()
-    }
 
     private fun startStreaming() {
         mIsStreaming = true
+        viewBinding.textView.text = ""
+        viewBinding.textView.visibility = View.INVISIBLE
         Thread {
             while (mIsStreaming) {
                 val elapsedTime: Long = System.currentTimeMillis() - mLastTime
@@ -673,16 +616,23 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         Log.d(TAG, "ServerResultCallback-onConnected: $success")
     }
 
-    override fun displayResponse(result: String) {
+    override fun displayResponse(result: String, isGloss: Boolean) {
         Log.d(TAG, "displayResponse in main act: $result")
         runOnUiThread {
-            val curLen = viewBinding.textView.text.length
-            if (curLen < 40) {
-                chatFragment.addItem(ChatBubble(result, true))
-                viewBinding.textView.append(" $result")
+            viewBinding.textView.visibility = View.VISIBLE
+            if (isGloss) {
+                if (viewBinding.textView.text.length < 40 && !isRealText) {
+                    viewBinding.textView.append(" $result")
+                }
+                else {
+                    viewBinding.textView.text = result
+                }
+                isRealText = false
+//                chatFragment.addItem(ChatBubble(result, true))
             } else {
                 chatFragment.addItem(ChatBubble(result, true))
                 viewBinding.textView.text = result
+                isRealText = true
             }
         }
     }
@@ -766,22 +716,18 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
             Thread.sleep(15000)
             println("resuming execution")
 
-            mServer.startTranscriptProcessing()
-            println("suspending execution")
-            Thread.sleep(30000)
-            println("resuming execution")
-
             mServer.checkTranscript()
             mLastTime = System.currentTimeMillis()
             while (!transcriptGenerated) {
                 val elapsedTime: Long = System.currentTimeMillis() - mLastTime
-                if (elapsedTime > 100) {
+                if (elapsedTime > 3000) {
                     mServer.checkTranscript()
                     mLastTime = System.currentTimeMillis()
                     Log.d(TAG, "Checking for transcript...")
                 }
             }
-//            mIsStreaming = false
+
+            mIsStreaming = false
             this.runOnUiThread {
                 filesFragment.changeStatus("View transcript")
             }

@@ -2,6 +2,9 @@ package com.example.synaera;
 
 import android.util.Log;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.net.URISyntaxException;
 
 import io.socket.client.IO;
@@ -268,9 +271,22 @@ public class ServerClient {
     private Emitter.Listener onResponse = new Emitter.Listener() {
         @Override
         public void call(Object... args) {
-            String result = (String)args[0];
+            Log.d(TAG, "len of args = "+args.length);
+            JSONObject data = (JSONObject) args[0];
+            String result = "";
+            boolean isGloss = false;
+            try {
+                if (data.has("result")) {
+                    result = data.getString("result");
+                }
+                if (data.has("isGloss")) {
+                    isGloss = data.getBoolean("isGloss");
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
             if (mSingleCallback != null)
-                mSingleCallback.displayResponse(result);
+                mSingleCallback.displayResponse(result, isGloss);
             Log.d(TAG, "onResponse: " + result);
         }
     };

@@ -2,6 +2,7 @@ package com.example.synaera
 
 import android.content.Context
 import android.view.LayoutInflater
+import android.view.View
 
 import android.view.ViewGroup
 
@@ -38,6 +39,9 @@ open class VideoRecyclerAdapter(var items: ArrayList<VideoItem>):
         holder.binding.imageView.setImageBitmap(currItem.image)
         holder.binding.titleTextView.text = currItem.title
         holder.binding.statusTextView.text = currItem.status
+        if (currItem.status=="View transcript") {
+            holder.binding.videoProgressBar.visibility = View.GONE
+        }
     }
 
 }

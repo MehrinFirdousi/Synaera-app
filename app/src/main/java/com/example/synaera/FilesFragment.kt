@@ -49,19 +49,6 @@ class FilesFragment() : Fragment() {
         binding.videoRV.adapter = mAdapter
         val mainActivity = requireActivity() as MainActivity
 
-//        val selectVideoIntent = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-//            if (result.resultCode == Activity.RESULT_OK) {
-//                val data: Intent? = result.data
-//                val dataUri = data?.data
-//                if (dataUri != null) {
-//                    val uriPathHelper = URIPathHelper()
-//                    val videoInputPath = uriPathHelper.getPath(mainActivity, dataUri).toString()
-//                    val videoInputFile = File(videoInputPath)
-//                    val frameExtractor = FrameExtractor(mainActivity)
-//
-//                }
-//            }
-//        }
         binding.uploadButton.setOnClickListener {
             val intent = Intent()
             intent.type = "video/*"
