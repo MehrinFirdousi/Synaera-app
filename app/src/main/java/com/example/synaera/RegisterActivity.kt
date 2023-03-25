@@ -1,5 +1,6 @@
 package com.example.synaera
 
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import com.example.synaera.databinding.ActivityRegisterBinding
@@ -23,11 +24,22 @@ class RegisterActivity : AppCompatActivity() {
             val passwordConfirm = binding.confirmPasswordEditText.text.toString()
 
             if (email != "" && name != "" && password != "" && passwordConfirm == password) {
-                db.addUser(User(0, email, name, password))
+                val id = db.getUsersCount()
+                val user = User(id, email, name, password)
+                db.addUser(user)
+                db.addLoggedInUser(user)
+                val intent = Intent(this, MainActivity::class.java)
+                intent.putExtra("user", user)
+                startActivity(intent)
                 finish()
             }
         }
 
+    }
 
+    override fun onBackPressed() {
+        val intent = Intent(this, LoginActivity::class.java)
+        startActivity(intent)
+        finish()
     }
 }
