@@ -17,7 +17,7 @@ import java.io.File
 class FilesFragment() : Fragment() {
 
     private var list: ArrayList<VideoItem> = ArrayList()
-    private var mAdapter = VideoRecyclerAdapter(list)
+    var mAdapter = VideoRecyclerAdapter(list)
     private lateinit var binding : FragmentFilesBinding
 
     constructor(list : ArrayList<VideoItem>) : this() {

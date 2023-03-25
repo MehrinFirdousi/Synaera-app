@@ -640,10 +640,13 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
     override fun addNewTranscript(result: String?) {
         if (result != null) {
             Log.d(TAG, "result is $result")
-            if (result.isNotEmpty() || result.compareTo("") != 0)
+            if (result.isNotEmpty() || result.compareTo("") != 0) {
                 transcriptGenerated = true
+                runOnUiThread {
+                    filesFragment.addTranscript(result)
+                }
+            }
         }
-
     }
 
     private fun fromBufferToBitmap(buffer: ByteBuffer, width: Int, height: Int): Bitmap? {
@@ -667,7 +670,8 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         if (decodeCount == 0) {
             videoThumbnail = imageBitmap!!
             this.runOnUiThread {
-                filesFragment.addItem(VideoItem("Video3", "Processing...", videoThumbnail, "test"))
+                val itemCount = filesFragment.mAdapter.itemCount + 1
+                filesFragment.addItem(VideoItem("Video$itemCount", "Processing...", videoThumbnail, ""))
                 viewBinding.openGalleryButton.setImageBitmap(videoThumbnail)
             }
         }
@@ -712,6 +716,9 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                     Log.d(TAG, "sending frame $frameNo")
                 }
             }
+            this.runOnUiThread {
+                filesFragment.changeStatus("Translating...")
+            }
             println("suspending execution")
             Thread.sleep(15000)
             println("resuming execution")
@@ -729,7 +736,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
             mIsStreaming = false
             this.runOnUiThread {
-                filesFragment.changeStatus("View transcript")
+                filesFragment.changeStatus("Transcript generated")
             }
             videoFrames.clear()
             transcriptGenerated = false

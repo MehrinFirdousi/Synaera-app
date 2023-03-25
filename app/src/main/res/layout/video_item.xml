@@ -6,55 +6,112 @@
     android:layout_height="wrap_content">
 
     <ImageView
-        android:id="@+id/imageView"
+        android:id="@+id/videoThumbnail"
         android:layout_width="94dp"
         android:layout_height="94dp"
-        android:layout_margin="20dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        app:layout_constraintBottom_toTopOf="@id/transcriptResult"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:srcCompat="@tools:sample/avatars" />
 
     <LinearLayout
+        android:id="@+id/videoDetails"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
         android:layout_margin="20dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/imageView"
-        app:layout_constraintTop_toTopOf="parent">
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="@+id/videoThumbnail"
+        app:layout_constraintEnd_toStartOf="@id/expandCollapseButton"
+        app:layout_constraintStart_toEndOf="@id/videoThumbnail"
+        app:layout_constraintTop_toTopOf="@+id/videoThumbnail">
 
         <TextView
             android:id="@+id/titleTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textStyle="bold"
-            android:textSize="18sp"
-            android:textColor="@color/feldgraulight"
             android:fontFamily="sans-serif-condensed"
-            android:text="Video Title" />
+            android:text="Video Title"
+            android:textColor="@color/feldgraulight"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/statusTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="10dp"
-            android:textColor="@color/lightGrey"
             android:fontFamily="sans-serif"
-            android:text="Processing..." />
+            android:text="Processing..."
+            android:textColor="@color/lightGrey" />
 
         <ProgressBar
             android:id="@+id/videoProgressBar"
+            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
             android:layout_width="match_parent"
             android:layout_height="15dp"
-            style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-            android:indeterminate="true"
-            android:indeterminateTintMode="src_atop"
-            android:indeterminateTint="@color/oldrose"
-            android:visibility="visible"
             android:layout_marginTop="2dp"
-            android:layout_marginEnd="30dp"
-            />
+            android:layout_marginEnd="20dp"
+            android:indeterminate="true"
+            android:indeterminateTint="@color/oldrose"
+            android:indeterminateTintMode="src_atop"
+            android:visibility="visible" />
     </LinearLayout>
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/expandCollapseButton"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_marginEnd="30dp"
+        android:visibility="gone"
+        app:layout_constraintStart_toEndOf="@id/videoDetails"
+        app:layout_constraintTop_toTopOf="@id/videoDetails"
+        app:layout_constraintBottom_toBottomOf="@id/videoDetails"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/expandButton"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/baseline_expand_more_24"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:tint="@color/feldgrau"
+            android:contentDescription="Expand to view transcript" />
+
+        <ImageView
+            android:id="@+id/collapseButton"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/baseline_expand_less_24"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:tint="@color/feldgrau"
+            android:contentDescription="Collapse to close transcript"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+    <TextView
+        android:id="@+id/transcriptResult"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="sample transcript"
+        android:layout_marginHorizontal="20dp"
+        android:textColor="@color/grey"
+        app:layout_constraintTop_toBottomOf="@id/videoThumbnail"
+        app:layout_constraintBottom_toTopOf="@id/videoSeparator"/>
+
+    <View
+        android:id="@+id/videoSeparator"
+        android:layout_width="match_parent"
+        android:layout_height="0.8dp"
+        app:layout_constraintTop_toBottomOf="@id/transcriptResult"
+        app:layout_constraintBottom_toBottomOf="parent"
+        android:background="#CDCDCD"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="10dp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

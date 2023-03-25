@@ -8,7 +8,7 @@
     tools:context=".MainActivity">
 
     <ImageView
-        android:id="@+id/imageView"
+        android:id="@+id/videoThumbnail"
         android:layout_width="0dp"
         android:layout_height="400dp"
         android:background="@color/feldgrau"
@@ -29,9 +29,9 @@
         android:layout_height="wrap_content"
         android:id="@+id/welcomeMsg"
         android:text="Welcome Ayesha,"
-        app:layout_constraintTop_toTopOf="@id/imageView"
+        app:layout_constraintTop_toTopOf="@id/videoThumbnail"
         app:layout_constraintBottom_toTopOf="@id/curveBox"
-        app:layout_constraintStart_toStartOf="@id/imageView"
+        app:layout_constraintStart_toStartOf="@id/videoThumbnail"
         app:layout_constraintEnd_toStartOf="@id/guideBox"
         app:layout_constraintHorizontal_bias="0.2"
         app:layout_constraintVertical_bias="0.75"
@@ -46,10 +46,10 @@
         android:text="What would you like to do \ntoday?"
         android:textColor="@color/white"
         android:textSize="15sp"
-        app:layout_constraintBottom_toBottomOf="@id/imageView"
+        app:layout_constraintBottom_toBottomOf="@id/videoThumbnail"
         app:layout_constraintEnd_toStartOf="@id/guideBox"
         app:layout_constraintHorizontal_bias="0.172"
-        app:layout_constraintStart_toStartOf="@id/imageView"
+        app:layout_constraintStart_toStartOf="@id/videoThumbnail"
         app:layout_constraintTop_toBottomOf="@id/welcomeMsg"
         app:layout_constraintVertical_bias="0.1" />
 
@@ -90,7 +90,7 @@
         app:layout_constraintEnd_toEndOf="@id/guideBox"
         app:layout_constraintHorizontal_bias="0.250"
         app:layout_constraintStart_toEndOf="@id/translate_home_button"
-        app:layout_constraintTop_toBottomOf="@id/imageView" />
+        app:layout_constraintTop_toBottomOf="@id/videoThumbnail" />
 
     <ImageButton
         android:id="@+id/translate_home_button"
