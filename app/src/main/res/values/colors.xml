@@ -36,4 +36,5 @@
     <color name="recordRed">#C32C49</color>
     <color name="recordRedTrans">#8FEC133E</color>
 
+    <color name="cameraBgColor"></color>
 </resources>

@@ -3,6 +3,7 @@ package com.example.synaera
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.widget.Toast
 import com.example.synaera.databinding.ActivityRegisterBinding
 
 class RegisterActivity : AppCompatActivity() {
@@ -32,6 +33,9 @@ class RegisterActivity : AppCompatActivity() {
                 intent.putExtra("user", user)
                 startActivity(intent)
                 finish()
+            }
+            else if (passwordConfirm != password) {
+                Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show()
             }
         }
 
