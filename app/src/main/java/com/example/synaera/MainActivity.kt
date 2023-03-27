@@ -87,6 +87,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
     private var transcriptGenerated : Boolean = false
 
     private var tts: TextToSpeech? = null
+    private var soundOn: Boolean = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -196,8 +197,17 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 //            startCameraPreview2()
             startCameraPreview()
         }
-
         cameraExecutor = Executors.newSingleThreadExecutor()
+
+        viewBinding.muteButton.setOnClickListener {
+            if (soundOn) {
+                viewBinding.muteButton.setImageResource(R.drawable.outline_volume_off_24)
+            }
+            else {
+                viewBinding.muteButton.setImageResource(R.drawable.outline_volume_up_24)
+            }
+            soundOn = !soundOn
+        }
 
         circleView = viewBinding.recordCircle
         recordButton = viewBinding.recordButton
@@ -217,7 +227,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                 viewBinding.openGalleryButton.visibility = View.INVISIBLE
                 viewBinding.flipCameraButton.visibility = View.INVISIBLE
                 viewBinding.infoButton.visibility = View.INVISIBLE
-                viewBinding.settingsButton.visibility = View.INVISIBLE
+                viewBinding.muteButton.visibility = View.INVISIBLE
             }
             else {
                 stopStreaming()
@@ -232,7 +242,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                 viewBinding.openGalleryButton.visibility = View.VISIBLE
                 viewBinding.flipCameraButton.visibility = View.VISIBLE
                 viewBinding.infoButton.visibility = View.VISIBLE
-                viewBinding.settingsButton.visibility = View.VISIBLE
+                viewBinding.muteButton.visibility = View.VISIBLE
             }
             translationOngoing = !translationOngoing
         }
@@ -450,7 +460,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         viewBinding.openGalleryButton.visibility = View.INVISIBLE
         viewBinding.flipCameraButton.visibility = View.INVISIBLE
         viewBinding.infoButton.visibility = View.INVISIBLE
-        viewBinding.settingsButton.visibility = View.INVISIBLE
+        viewBinding.muteButton.visibility = View.INVISIBLE
         viewBinding.textView.visibility = View.INVISIBLE
     }
 
@@ -460,7 +470,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         viewBinding.openGalleryButton.visibility = View.VISIBLE
         viewBinding.flipCameraButton.visibility = View.VISIBLE
         viewBinding.infoButton.visibility = View.VISIBLE
-        viewBinding.settingsButton.visibility = View.VISIBLE
+        viewBinding.muteButton.visibility = View.VISIBLE
         if (viewBinding.textView.text.isNotEmpty())
             viewBinding.textView.visibility = View.VISIBLE
     }
@@ -666,30 +676,6 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                 viewBinding.openGalleryButton.setImageBitmap(videoThumbnail)
             }
         }
-
-//        }.start()
-
-        /*// 2. Get the frame file in app external file directory
-        val allFrameFileFolder = File(this.getExternalFilesDir(null), UUID.randomUUID().toString())
-        if (!allFrameFileFolder.isDirectory) {
-            allFrameFileFolder.mkdirs()
-        }
-        val frameFile = File(allFrameFileFolder, "frame_num_${currentFrame.timestamp.toString().padStart(10, '0')}.jpeg")
-
-        // 3. Save current frame to storage
-        imageBitmap?.let {
-            val savedFile = Utils.saveImageToFile(it, frameFile)
-            savedFile?.let {
-                imagePaths.add(savedFile.toUri())
-                titles.add("${currentFrame.position} (${currentFrame.timestamp})")
-            }
-        }
-
-        totalSavingTimeMS += System.currentTimeMillis() - startSavingTime
-
-        this.runOnUiThread {
-            infoTextView.text = "Extract ${currentFrame.position} frames"
-        }*/
     }
 
     override fun onAllFrameExtracted(processedFrameCount: Int, processedTimeMs: Long) {
@@ -751,7 +737,9 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
     }
 
     private fun speakOut(text: String) {
-        tts!!.speak(text, TextToSpeech.QUEUE_ADD, null, "")
+        if (soundOn) {
+            tts!!.speak(text, TextToSpeech.QUEUE_ADD, null, "")
+        }
     }
     override fun onInit(status: Int) {
         if (status == TextToSpeech.SUCCESS) {
