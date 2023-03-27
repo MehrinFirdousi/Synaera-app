@@ -3,14 +3,15 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:id="@+id/videoItemContainer">
 
     <ImageView
         android:id="@+id/videoThumbnail"
         android:layout_width="94dp"
         android:layout_height="94dp"
         android:layout_marginTop="20dp"
-        android:layout_marginStart="20dp"
+        android:layout_marginStart="25dp"
         android:layout_marginEnd="20dp"
         app:layout_constraintBottom_toTopOf="@id/transcriptResult"
         app:layout_constraintStart_toStartOf="parent"
@@ -56,13 +57,12 @@
             android:layout_marginEnd="20dp"
             android:indeterminate="true"
             android:indeterminateTint="@color/oldrose"
-            android:indeterminateTintMode="src_atop"
-            android:visibility="visible" />
+            android:indeterminateTintMode="src_atop"/>
     </LinearLayout>
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/expandCollapseButton"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="39dp"
+        android:layout_height="39dp"
         android:layout_marginEnd="30dp"
         android:visibility="gone"
         app:layout_constraintStart_toEndOf="@id/videoDetails"
@@ -94,14 +94,21 @@
             app:tint="@color/feldgrau"
             android:contentDescription="Collapse to close transcript"/>
 
+        <CheckBox
+            android:id="@+id/videoCheckBox"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:buttonTint="@color/lightBlue"/>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
     <TextView
         android:id="@+id/transcriptResult"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="sample transcript"
-        android:layout_marginHorizontal="20dp"
+        android:layout_marginHorizontal="25dp"
         android:textColor="@color/grey"
+        android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/videoThumbnail"
         app:layout_constraintBottom_toTopOf="@id/videoSeparator"/>
 
@@ -112,6 +119,6 @@
         app:layout_constraintTop_toBottomOf="@id/transcriptResult"
         app:layout_constraintBottom_toBottomOf="parent"
         android:background="#CDCDCD"
-        android:layout_marginHorizontal="20dp"
+        android:layout_marginHorizontal="25dp"
         android:layout_marginTop="10dp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

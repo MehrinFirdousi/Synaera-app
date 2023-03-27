@@ -7,7 +7,9 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Matrix
+import android.graphics.Paint
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
@@ -101,8 +103,8 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         chatList.add(ChatBubble("hi", false))
 
         /** list for the videos*/
-//        videoList.add(VideoItem("Video1", "Processing...", getDummyBitmap(100,100,123) ,"123"))
-//        videoList.add(VideoItem("Video2", "View Transcript", getDummyBitmap(120,120,50) ,"123"))
+//        videoList.add(VideoItem("Video1", "Processing...", getDummyBitmap(100,100,123) ,"123", false))
+//        videoList.add(VideoItem("Video2", "View Transcript", getDummyBitmap(120,120,50) ,"123", false))
 
         chatFragment = ChatFragment.newInstance(chatList)
         filesFragment = FilesFragment.newInstance(videoList)
@@ -291,7 +293,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         animationSet.start()
     }
 
-    fun dpToPx(dp: Int): Int {
+    private fun dpToPx(dp: Int): Int {
         val density: Float = resources.displayMetrics.density
         return (dp.toFloat() * density).roundToInt()
     }
@@ -671,7 +673,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
             videoThumbnail = imageBitmap!!
             this.runOnUiThread {
                 val itemCount = filesFragment.mAdapter.itemCount + 1
-                filesFragment.addItem(VideoItem("Video$itemCount", "Processing...", videoThumbnail, ""))
+                filesFragment.addItem(VideoItem("Video$itemCount", "Processing...", videoThumbnail, "", false))
                 viewBinding.openGalleryButton.setImageBitmap(videoThumbnail)
             }
         }
@@ -742,5 +744,20 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
             transcriptGenerated = false
         }.start()
         Log.d(TAG, "Save: $processedFrameCount frames in: $processedTimeMs ms.")
+    }
+    private fun getDummyBitmap(
+        targetWidth: Int, targetHeight: Int,
+        color: Int
+    ): Bitmap {
+        val bitmap = Bitmap.createBitmap(
+            targetWidth, targetHeight,
+            Bitmap.Config.ARGB_8888
+        )
+        val canvas = Canvas(bitmap)
+        val paint = Paint()
+        paint.isAntiAlias = true
+        paint.color = color
+        canvas.drawPaint(paint)
+        return bitmap
     }
 }
