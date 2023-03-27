@@ -15,6 +15,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.speech.tts.TextToSpeech
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
@@ -41,7 +42,7 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import kotlin.math.roundToInt
 
-class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtractor {
+class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtractor, TextToSpeech.OnInitListener {
     private lateinit var viewBinding: ActivityMainBinding
     private lateinit var cameraExecutor: ExecutorService
 
@@ -85,6 +86,8 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
     lateinit var selectVideoIntent : ActivityResultLauncher<Intent>
     private var transcriptGenerated : Boolean = false
 
+    private var tts: TextToSpeech? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewBinding = ActivityMainBinding.inflate(layoutInflater)
@@ -109,14 +112,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         chatFragment = ChatFragment.newInstance(chatList)
         filesFragment = FilesFragment.newInstance(videoList)
         homeFragment = HomeFragment.newInstance()
-
-        // Set up HTTP client
-//        client = OkHttpClient().newBuilder()
-//            .connectTimeout(30, TimeUnit.SECONDS)
-//            .readTimeout(30, TimeUnit.SECONDS)
-//            .writeTimeout(30, TimeUnit.SECONDS)
-//            .retryOnConnectionFailure(true)
-//            .build()
+        tts = TextToSpeech(this, this)
 
         // Request camera permissions
         if (allPermissionsGranted()) {
@@ -171,24 +167,11 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                 }
 
             }
-            //do whatever with the result, its the URI
-//            var videoBytes = convertVideoToBytes(uri)
-
-//            val frames = getFrames(uri)
-//            for (frame in frames) {
-//                val byteArray = ImageConverter.BitmaptoJPEG(frame)
-//                val len = byteArray.size
-//                Log.d(TAG, "frame len is $len")
-//                mServer.sendImage(byteArray)
-//                mLastTime = System.currentTimeMillis()
-//            }
 
         }
 
         // Set up the listeners for record, flip camera and open gallery buttons
         viewBinding.openGalleryButton.setOnClickListener {
-//            selectVideoIntent.launch("video/*")
-
             val intent = Intent()
             intent.type = "video/*"
             intent.action = Intent.ACTION_PICK
@@ -496,6 +479,10 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor.shutdown()
+        if (tts != null) {
+            tts!!.stop()
+            tts!!.shutdown()
+        }
     }
 
     companion object {
@@ -625,15 +612,17 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
             if (isGloss) {
                 if (viewBinding.textView.text.length < 40 && !isRealText) {
                     viewBinding.textView.append(" $result")
+                    speakOut(result)
                 }
                 else {
                     viewBinding.textView.text = result
+                    speakOut(result)
                 }
                 isRealText = false
-//                chatFragment.addItem(ChatBubble(result, true))
             } else {
                 chatFragment.addItem(ChatBubble(result, true))
                 viewBinding.textView.text = result
+                speakOut(result)
                 isRealText = true
             }
         }
@@ -759,5 +748,19 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         paint.color = color
         canvas.drawPaint(paint)
         return bitmap
+    }
+
+    private fun speakOut(text: String) {
+        tts!!.speak(text, TextToSpeech.QUEUE_ADD, null, "")
+    }
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            val result = tts!!.setLanguage(Locale.US)
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                Toast.makeText(this, "Language for text to speech not supported!", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Log.e(TAG, "TextToSpeech initialization failed")
+        }
     }
 }
