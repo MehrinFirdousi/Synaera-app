@@ -264,6 +264,57 @@ open class DatabaseHelper(context: Context?) :
 
     }
 
+    open fun updateVideoStatus(id : Int, status : String) {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(STATUS, status)
+
+        // updating row
+        db.update(
+            VIDEOS_TABLE_NAME,
+            values,
+            "$ID = ?",
+            arrayOf(id.toString())
+        )
+
+        db.close()
+
+    }
+
+    open fun updateVideoTranscript(id : Int, transcript : String) {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(TRANSCRIPT, transcript)
+
+        // updating row
+        db.update(
+            VIDEOS_TABLE_NAME,
+            values,
+            "$ID = ?",
+            arrayOf(id.toString())
+        )
+
+        db.close()
+
+    }
+
+    open fun updateVideoDeleteMode(id : Int, deleteMode : Int) {
+        val db = this.writableDatabase
+        val values = ContentValues()
+        values.put(DELETEMODE, deleteMode)
+
+        // updating row
+        db.update(
+            VIDEOS_TABLE_NAME,
+            values,
+            "$ID = ?",
+            arrayOf(id.toString())
+        )
+
+        db.close()
+
+    }
+
     open fun deleteUser(user: User) {
         val db = this.writableDatabase
         db.delete(

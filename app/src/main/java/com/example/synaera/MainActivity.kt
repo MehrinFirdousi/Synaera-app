@@ -113,8 +113,10 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 //        videoList.add(VideoItem("Video1", "Processing...", getDummyBitmap(100,100,123) ,"123", false))
 //        videoList.add(VideoItem("Video2", "View Transcript", getDummyBitmap(120,120,50) ,"123", false))
 
+        videoList = db.getAllVideos()
+
         chatFragment = ChatFragment.newInstance(chatList)
-        filesFragment = FilesFragment.newInstance(videoList)
+        filesFragment = FilesFragment.newInstance(videoList, db)
         homeFragment = HomeFragment.newInstance(db)
         tts = TextToSpeech(this, this)
 
