@@ -7,8 +7,8 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.example.synaera.databinding.ChatItemBinding
 
-open class RecyclerAdapter(var items: ArrayList<ChatBubble>, val listener : (ChatBubble, Int) -> Unit) :
-    RecyclerView.Adapter<RecyclerAdapter.ViewHolder>() {
+open class ChatRecyclerAdapter(var items: ArrayList<ChatBubble>, val listener : (ChatBubble, Int) -> Unit) :
+    RecyclerView.Adapter<ChatRecyclerAdapter.ViewHolder>() {
 
     private lateinit var context : Context
 
@@ -55,6 +55,10 @@ open class RecyclerAdapter(var items: ArrayList<ChatBubble>, val listener : (Cha
             holder.binding.chatItemText.setBackgroundResource(R.drawable.my_message_bubble)
             editParams.endToStart = holder.binding.chatItemText.id
             editParams.startToEnd = ConstraintLayout.LayoutParams.UNSET
+        }
+
+        holder.binding.chatItemText.post {
+            holder.binding.chatItemText.maxWidth = (holder.binding.chatItemLayout.width * 0.8).toInt()
         }
     }
 
