@@ -58,7 +58,7 @@ open class VideoRecyclerAdapter(var items: ArrayList<VideoItem>):
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val currItem = items[position]
 
-        holder.binding.videoThumbnail.setImageBitmap(currItem.image)
+        holder.binding.videoThumbnail.setImageBitmap(currItem.bitmap)
         holder.binding.titleTextView.text = currItem.title
         holder.binding.statusTextView.text = currItem.status
 

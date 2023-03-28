@@ -25,8 +25,8 @@ class RegisterActivity : AppCompatActivity() {
             val passwordConfirm = binding.confirmPasswordEditText.text.toString()
 
             if (email != "" && name != "" && password != "" && passwordConfirm == password) {
-                val id = db.getUsersCount()
-                val user = User(id, email, name, password)
+                val id = db.getUsersCount() + 1
+                val user = User(id, email, name, Hasher.hash(password))
                 db.addUser(user)
                 db.addLoggedInUser(user)
                 val intent = Intent(this, MainActivity::class.java)

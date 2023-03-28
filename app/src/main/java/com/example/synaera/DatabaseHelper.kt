@@ -10,23 +10,28 @@ import android.database.sqlite.SQLiteOpenHelper
 open class DatabaseHelper(context: Context?) :
     SQLiteOpenHelper(context, DB_NAME, null, DB_VERSION) {
     override fun onCreate(db: SQLiteDatabase) {
-        db.execSQL("create table loggedin ($EMAIL TEXT NOT NULL PRIMARY KEY, $NAME TEXT NOT NULL, $PASSWORD TEXT NOT NULL, id INTEGER NOT NULL);")
-        db.execSQL(CREATE_TABLE)
-
-        db.execSQL("INSERT INTO $TABLE_NAME ($EMAIL, $NAME, $PASSWORD) VALUES ('qusai061@gmail.com', 'Qusai', '1')")
-
-
+        db.execSQL(CREATE_USER_TABLE)
+        db.execSQL(CREATE_LOGGEDIN_TABLE)
+        db.execSQL(CREATE_VIDEOS_TABLE)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
-        db.execSQL("DROP TABLE IF EXISTS loggedin")
-        onCreate(db)
+        if (oldVersion < 6) {
+            db.execSQL("DROP TABLE IF EXISTS $USER_TABLE_NAME")
+            db.execSQL("DROP TABLE IF EXISTS $LOGGEDIN_TABLE_NAME")
+            db.execSQL("DROP TABLE IF EXISTS $VIDEOS_TABLE_NAME")
+            db.execSQL("DROP TABLE IF EXISTS COUNTRIES")
+            db.execSQL(CREATE_USER_TABLE)
+            db.execSQL(CREATE_LOGGEDIN_TABLE)
+            db.execSQL(CREATE_VIDEOS_TABLE)
+        }
     }
 
     companion object {
         // Table Name
-        const val TABLE_NAME = "COUNTRIES"
+        const val USER_TABLE_NAME = "USERS"
+        const val LOGGEDIN_TABLE_NAME = "loggedin"
+        const val VIDEOS_TABLE_NAME = "videos"
 
         // Table columns
         const val ID = "rowid"
@@ -34,15 +39,27 @@ open class DatabaseHelper(context: Context?) :
         const val NAME = "name"
         const val PASSWORD = "password"
 
+        const val TITLE = "title"
+        const val STATUS = "status"
+        const val THUMBNAIL = "thumbnail"
+        const val TRANSCRIPT = "transcript"
+        const val DELETEMODE = "deletemode"
+
         // Database Information
         const val DB_NAME = "SYNAERA.DB"
 
         // database version
-        const val DB_VERSION = 1
+        const val DB_VERSION = 5
 
         // Creating table query
-        private const val CREATE_TABLE = ("create table $TABLE_NAME($EMAIL " +
+        private const val CREATE_USER_TABLE = ("create table $USER_TABLE_NAME($EMAIL " +
                 "TEXT NOT NULL PRIMARY KEY, $NAME TEXT NOT NULL, $PASSWORD TEXT NOT NULL);")
+
+        private const val CREATE_LOGGEDIN_TABLE = ("create table $LOGGEDIN_TABLE_NAME ($EMAIL TEXT NOT NULL PRIMARY KEY," +
+                " $NAME TEXT NOT NULL, $PASSWORD TEXT NOT NULL, id INTEGER NOT NULL);")
+
+        private const val CREATE_VIDEOS_TABLE = ("create table $VIDEOS_TABLE_NAME ($TITLE TEXT NOT NULL PRIMARY KEY," +
+                " $STATUS TEXT NOT NULL, $THUMBNAIL TEXT NOT NULL, $TRANSCRIPT TEXT NOT NULL, $DELETEMODE INTEGER NOT NULL);")
     }
 
     open fun addUser(user: User) {
@@ -53,7 +70,22 @@ open class DatabaseHelper(context: Context?) :
         values.put(NAME, user.name)
         values.put(PASSWORD, user.password)
 
-        db.insert(TABLE_NAME, null, values)
+        db.insert(USER_TABLE_NAME, null, values)
+        db.close()
+
+    }
+
+    open fun addVideo(videoItem: VideoItem) {
+        val db = this.writableDatabase
+
+        val values = ContentValues()
+        values.put(TITLE, videoItem.title)
+        values.put(STATUS, videoItem.status)
+        values.put(THUMBNAIL, videoItem.convertBitmapToString())
+        values.put(TRANSCRIPT, videoItem.transcript)
+        values.put(DELETEMODE, videoItem.deleteModeToInt())
+
+        db.insert(VIDEOS_TABLE_NAME, null, values)
         db.close()
 
     }
@@ -67,22 +99,23 @@ open class DatabaseHelper(context: Context?) :
         values.put(PASSWORD, user.password)
         values.put("id", user.id)
 
-        db.insert("loggedin", null, values)
+        db.insert(LOGGEDIN_TABLE_NAME, null, values)
         db.close()
-
     }
 
     open fun drop() {
         val db = this.writableDatabase
 
-        onUpgrade(db, DB_VERSION, 1)
+        db.execSQL("DROP TABLE IF EXISTS $USER_TABLE_NAME")
+        db.execSQL("DROP TABLE IF EXISTS $LOGGEDIN_TABLE_NAME")
+        db.execSQL("DROP TABLE IF EXISTS $VIDEOS_TABLE_NAME")
     }
 
     open fun getUser(email: String): User {
         val db = this.readableDatabase
 
         val cursor: Cursor? = db.query(
-            TABLE_NAME,
+            USER_TABLE_NAME,
             arrayOf(
                 ID,
                 EMAIL,
@@ -106,7 +139,7 @@ open class DatabaseHelper(context: Context?) :
         val db = this.readableDatabase
 
         val cursor: Cursor? = db.query(
-            TABLE_NAME,
+            USER_TABLE_NAME,
             arrayOf(
                 ID,
                 EMAIL,
@@ -126,10 +159,35 @@ open class DatabaseHelper(context: Context?) :
 
     }
 
+    open fun getVideo(title: String): VideoItem {
+        val db = this.readableDatabase
+
+        val cursor: Cursor? = db.query(
+            VIDEOS_TABLE_NAME,
+            arrayOf(
+                TITLE,
+                STATUS,
+                THUMBNAIL, TRANSCRIPT,
+                DELETEMODE
+            ),
+            "$TITLE=?",
+            arrayOf(title),
+            null,
+            null,
+            null,
+            null
+        )
+        cursor!!.moveToFirst()
+        val videoItem = VideoItem(cursor.getString(0),cursor.getString(1), cursor.getString(2), cursor.getString(3), cursor.getInt(4))
+        cursor.close()
+        return videoItem
+
+    }
+
     fun getAllUsers() : ArrayList<User> {
         val userList = ArrayList<User>()
         // Select All Query
-        val selectQuery = "SELECT $ID, $EMAIL, $NAME, $PASSWORD FROM $TABLE_NAME"
+        val selectQuery = "SELECT $ID, $EMAIL, $NAME, $PASSWORD FROM $USER_TABLE_NAME"
 
         val db = this.writableDatabase
         val cursor = db.rawQuery(selectQuery, null)
@@ -145,6 +203,27 @@ open class DatabaseHelper(context: Context?) :
             cursor.close()
         }
         return userList
+    }
+
+    fun getAllVideos() : ArrayList<VideoItem> {
+        val videoList = ArrayList<VideoItem>()
+        // Select All Query
+        val selectQuery = "SELECT * FROM $VIDEOS_TABLE_NAME"
+
+        val db = this.writableDatabase
+        val cursor = db.rawQuery(selectQuery, null)
+
+        if (cursor.moveToFirst()) {
+            do {
+                val videoItem = VideoItem(cursor.getString(0),cursor.getString(1), cursor.getString(2),
+                    cursor.getString(3), cursor.getInt(4))
+
+                videoList.add(videoItem)
+            } while (cursor.moveToNext())
+
+            cursor.close()
+        }
+        return videoList
     }
 
     fun getLoggedIn() : User {
@@ -175,7 +254,7 @@ open class DatabaseHelper(context: Context?) :
 
         // updating row
         db.update(
-            TABLE_NAME,
+            USER_TABLE_NAME,
             values,
             "$ID = ?",
             arrayOf(id.toString())
@@ -185,13 +264,22 @@ open class DatabaseHelper(context: Context?) :
 
     }
 
-
     open fun deleteUser(user: User) {
         val db = this.writableDatabase
         db.delete(
-            TABLE_NAME,
+            USER_TABLE_NAME,
             "$ID = ?",
             arrayOf(user.id.toString())
+        )
+        db.close()
+    }
+
+    open fun deleteVideo(videoItem: VideoItem) {
+        val db = this.writableDatabase
+        db.delete(
+            VIDEOS_TABLE_NAME,
+            "$TITLE = ?",
+            arrayOf(videoItem.title)
         )
         db.close()
     }
@@ -208,12 +296,13 @@ open class DatabaseHelper(context: Context?) :
 
 
     open fun getUsersCount(): Int {
-        val countQuery = "SELECT * FROM $TABLE_NAME"
+        val countQuery = "SELECT * FROM $USER_TABLE_NAME"
         val db = this.readableDatabase
         val cursor = db.rawQuery(countQuery, null)
+        val count = cursor.count
         cursor.close()
 
         // return count
-        return cursor.count
+        return count
     }
 }

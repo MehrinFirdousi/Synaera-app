@@ -17,7 +17,6 @@ class LoginActivity : AppCompatActivity() {
 
         val db = DatabaseHelper(this)
 
-
         val loggedInUser = db.getLoggedIn()
 
         if (loggedInUser.email != "") {
@@ -37,7 +36,7 @@ class LoginActivity : AppCompatActivity() {
 
         binding.loginBttn.setOnClickListener{
             val email = binding.emailEditText.text.toString()
-            val password = binding.passwordEditText.text.toString()
+            val password = Hasher.hash(binding.passwordEditText.text.toString())
             var userFound = false
 
             users = db.getAllUsers()
