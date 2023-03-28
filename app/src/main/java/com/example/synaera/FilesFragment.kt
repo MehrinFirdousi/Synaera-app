@@ -26,15 +26,17 @@ class FilesFragment() : Fragment() {
     private var list: ArrayList<VideoItem> = ArrayList()
     var mAdapter = VideoRecyclerAdapter(list)
     private lateinit var binding : FragmentFilesBinding
+    lateinit var db : DatabaseHelper
 
-    constructor(list : ArrayList<VideoItem>) : this() {
+    constructor(list : ArrayList<VideoItem>, db : DatabaseHelper) : this() {
         this.list = list
+        this.db = db
     }
 
     companion object {
         @JvmStatic
-        fun newInstance(list : ArrayList<VideoItem>) : FilesFragment {
-            return FilesFragment(list)
+        fun newInstance(list : ArrayList<VideoItem>, db : DatabaseHelper) : FilesFragment {
+            return FilesFragment(list, db)
         }
     }
 
@@ -131,6 +133,8 @@ class FilesFragment() : Fragment() {
     }
 
     fun addItem (item: VideoItem) {
+
+        db.addVideo(item)
         list.add(item)
         mAdapter.notifyItemInserted(list.size - 1)
         scrollToPos(list.size - 1)
@@ -141,6 +145,7 @@ class FilesFragment() : Fragment() {
         if (lastPos < 0)
             return
         list[lastPos].status = status
+        db.updateVideoStatus(list.size, status)
         mAdapter.notifyItemChanged(lastPos)
     }
 
@@ -149,11 +154,13 @@ class FilesFragment() : Fragment() {
         if (lastPos < 0)
             return
         list[lastPos].transcript = transcript
+        db.updateVideoTranscript(list.size, transcript)
         mAdapter.notifyItemChanged(lastPos)
     }
 
     private fun setDeleteMode(mode: Boolean, position: Int) {
         list[position].deleteMode = mode
+        db.updateVideoDeleteMode(position + 1, list[position].deleteModeToInt())
         mAdapter.notifyItemChanged(position)
     }
 }

@@ -9,12 +9,24 @@ import com.example.synaera.databinding.FragmentHomeBinding
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 
-class HomeFragment : Fragment() {
+class HomeFragment() : Fragment() {
 
     private lateinit var homeBinding: FragmentHomeBinding
     private lateinit var bottomNavigationView : BottomNavigationView
     lateinit var db : DatabaseHelper
     lateinit var user : User
+
+    companion object {
+        @JvmStatic
+        fun newInstance(db: DatabaseHelper) : HomeFragment {
+
+            return HomeFragment(db)
+        }
+    }
+    constructor(db : DatabaseHelper) : this() {
+        this.db = db
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -51,16 +63,10 @@ class HomeFragment : Fragment() {
 //            .build()
 
         user = requireActivity().intent.extras!!.getSerializable("user") as User
-        db = DatabaseHelper(requireContext())
         return homeBinding.root
     }
 
-    companion object {
-        @JvmStatic
-        fun newInstance() : HomeFragment {
-            return HomeFragment()
-        }
-    }
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)

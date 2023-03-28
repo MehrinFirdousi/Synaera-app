@@ -15,6 +15,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
+import android.provider.ContactsContract.Data
 import android.speech.tts.TextToSpeech
 import android.util.DisplayMetrics
 import android.util.Log
@@ -102,6 +103,8 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 //        mCameraPreview2 = viewBinding.viewFinder2
         mCameraPreview = viewBinding.viewFinder
 
+        val db = DatabaseHelper(this)
+
         /** sender = true for system, false for user */
         chatList.add(ChatBubble("Hello", true))
         chatList.add(ChatBubble("hi", false))
@@ -110,9 +113,11 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 //        videoList.add(VideoItem("Video1", "Processing...", getDummyBitmap(100,100,123) ,"123", false))
 //        videoList.add(VideoItem("Video2", "View Transcript", getDummyBitmap(120,120,50) ,"123", false))
 
+        videoList = db.getAllVideos()
+
         chatFragment = ChatFragment.newInstance(chatList)
-        filesFragment = FilesFragment.newInstance(videoList)
-        homeFragment = HomeFragment.newInstance()
+        filesFragment = FilesFragment.newInstance(videoList, db)
+        homeFragment = HomeFragment.newInstance(db)
         tts = TextToSpeech(this, this)
 
         // Request camera permissions
