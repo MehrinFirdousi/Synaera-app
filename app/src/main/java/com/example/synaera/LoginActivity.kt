@@ -21,7 +21,7 @@ class LoginActivity : AppCompatActivity() {
 
         if (loggedInUser.email != "") {
             val intent = Intent(this, MainActivity::class.java)
-            intent.putExtra("user", loggedInUser)
+            intent.putExtra("id", loggedInUser.id)
             startActivity(intent)
             finish()
         }
@@ -46,7 +46,7 @@ class LoginActivity : AppCompatActivity() {
                     userFound = true
                     val intent = Intent(this, MainActivity::class.java)
                     db.addLoggedInUser(user)
-                    intent.putExtra("user", user)
+                    intent.putExtra("id", user.id)
                     startActivity(intent)
                     finish()
                 }

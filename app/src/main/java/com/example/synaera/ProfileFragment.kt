@@ -39,7 +39,7 @@ class ProfileFragment : Fragment() {
         val nameParams = binding.nameIcon.layoutParams as ConstraintLayout.LayoutParams
 
         val db = DatabaseHelper(context)
-        val user : User = requireActivity().intent.extras!!.getSerializable("user") as User
+        val user = db.getUser(requireActivity().intent.getIntExtra("id", 0))
 
         binding.emailValue.text = user.email
         binding.nameValue.text = user.name
