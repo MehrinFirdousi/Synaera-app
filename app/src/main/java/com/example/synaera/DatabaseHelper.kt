@@ -13,7 +13,7 @@ open class DatabaseHelper(context: Context?) :
         db.execSQL("create table loggedin ($EMAIL TEXT NOT NULL PRIMARY KEY, $NAME TEXT NOT NULL, $PASSWORD TEXT NOT NULL, id INTEGER NOT NULL);")
         db.execSQL(CREATE_TABLE)
 
-        db.execSQL("INSERT INTO $TABLE_NAME ($EMAIL, $NAME, $PASSWORD) VALUES ('qusai061@gmail.com', 'Qusai', '1')")
+        db.execSQL("INSERT INTO $TABLE_NAME ($EMAIL, $NAME, $PASSWORD) VALUES ('a@gmail.com', 'Ayesha', '1')")
 
 
     }

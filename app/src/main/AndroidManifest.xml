@@ -40,9 +40,6 @@
             android:name=".RegisterActivity"
             android:exported="false" />
         <activity
-            android:name=".Settings"
-            android:exported="false" />
-        <activity
             android:name=".MainActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustPan" />
