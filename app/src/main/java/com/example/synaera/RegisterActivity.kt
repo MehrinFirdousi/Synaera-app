@@ -30,7 +30,7 @@ class RegisterActivity : AppCompatActivity() {
                 db.addUser(user)
                 db.addLoggedInUser(user)
                 val intent = Intent(this, MainActivity::class.java)
-                intent.putExtra("user", user)
+                intent.putExtra("id", user.id)
                 startActivity(intent)
                 finish()
             }

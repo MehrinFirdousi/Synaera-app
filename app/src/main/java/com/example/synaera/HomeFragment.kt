@@ -62,7 +62,6 @@ class HomeFragment() : Fragment() {
 //            .setBottomRightCorner(CornerFamily.ROUNDED, 0f)
 //            .build()
 
-        user = requireActivity().intent.extras!!.getSerializable("user") as User
         return homeBinding.root
     }
 
@@ -70,6 +69,7 @@ class HomeFragment() : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        user = db.getUser(requireActivity().intent.getIntExtra("id", 0))
         val welcome = "Welcome " + user.name
         homeBinding.welcomeMsg.text = welcome
     }

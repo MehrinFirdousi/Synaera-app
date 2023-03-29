@@ -103,6 +103,16 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 //        mCameraPreview2 = viewBinding.viewFinder2
         mCameraPreview = viewBinding.viewFinder
 
+        //Info screen
+        viewBinding.infoButton.setOnClickListener{
+            viewBinding.infoBg.visibility = View.VISIBLE
+        }
+
+        viewBinding.infoBg.setOnClickListener{
+            viewBinding.infoBg.visibility = View.GONE
+        }
+
+
         val db = DatabaseHelper(this)
 
         /** sender = true for system, false for user */
