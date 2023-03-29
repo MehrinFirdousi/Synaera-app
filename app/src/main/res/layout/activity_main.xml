@@ -13,11 +13,11 @@
         android:id="@+id/viewFinder"
         android:layout_width="640dp"
         android:layout_height="480dp"
-        app:layout_constraintVertical_bias="0.26"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        app:layout_constraintVertical_bias="0.26" />
 
 <!--    <androidx.camera.view.PreviewView-->
 <!--        android:id="@+id/viewFinder2"-->
@@ -129,14 +129,14 @@
         android:contentDescription="@string/flip_camera" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottom_nav_bar"
         android:layout_width="match_parent"
         android:layout_height="55dp"
-        android:id="@+id/bottom_nav_bar"
         android:background="@color/darkgrey"
-        app:itemTextColor="@color/bottom_nav_color"
         app:itemIconTint="@color/bottom_nav_color"
-        app:menu="@menu/bottom_menu"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        app:itemTextColor="@color/bottom_nav_color"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:menu="@menu/bottom_menu" />
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -149,5 +149,16 @@
         app:layout_constraintBottom_toTopOf="@id/recordCircle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
+
+    <FrameLayout
+        android:id="@+id/info_bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/info_bg"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:visibility="gone"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
