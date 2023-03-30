@@ -21,6 +21,7 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
+import android.widget.AdapterViewFlipper
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -44,11 +45,10 @@ import java.util.concurrent.Executors
 import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtractor, TextToSpeech.OnInitListener {
-    private lateinit var viewBinding: ActivityMainBinding
+    lateinit var viewBinding: ActivityMainBinding
     private lateinit var cameraExecutor: ExecutorService
 
 //    private var url : String = "http://192.168.1.16:5000/sendImg"
-//    private var url : String = "https://42bd-2001-8f8-1623-131a-c997-5075-626d-f3eb.eu.ngrok.io/sendImg"
 //    private var url : String = "http://synaera-api.centralindia.cloudapp.azure.com:5000/sendImg"
 
     private var translationOngoing : Boolean = false
@@ -96,7 +96,8 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         setContentView(viewBinding.root)
 
         mServer = ServerClient.getInstance()
-        mServer.init("user", "pass", "20.193.159.90", 5000)
+        mServer.init("user", "pass", "192.168.1.41", 5000)
+//        mServer.init("user", "pass", "20.193.159.90", 5000)
 //        mServer.init("user", "pass", "20.211.25.165", 5000)
         mServer.connect()
 
@@ -106,18 +107,22 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         //Info screen
         viewBinding.infoButton.setOnClickListener{
             viewBinding.infoBg.visibility = View.VISIBLE
+            viewBinding.personOutline.visibility = View.VISIBLE
+            viewBinding.guideMsg.visibility = View.VISIBLE
         }
 
         viewBinding.infoBg.setOnClickListener{
             viewBinding.infoBg.visibility = View.GONE
+            viewBinding.personOutline.visibility = View.GONE
+            viewBinding.guideMsg.visibility = View.GONE
         }
 
 
         val db = DatabaseHelper(this)
 
         /** sender = true for system, false for user */
-        chatList.add(ChatBubble("Hello", true))
-        chatList.add(ChatBubble("hi", false))
+//        chatList.add(ChatBubble("Hello", true))
+//        chatList.add(ChatBubble("hi", false))
 
         /** list for the videos*/
 //        videoList.add(VideoItem("Video1", "Processing...", getDummyBitmap(100,100,123) ,"123", false))
@@ -264,7 +269,6 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
         recordAnimation.resetAnimation(circleView)
 
-
         handler = Handler()
         runnable = Runnable {
             recordAnimation.animateStroke(circleView)
@@ -382,7 +386,6 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
             else if (!cursor.moveToFirst())
                 Log.d(TAG, "could not set thumbnail, cursor cannot move to first")
         }*/
-
     }
 
     private fun setViewPagerListener() {
@@ -606,24 +609,47 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         mIsStreaming = true
         viewBinding.textView.text = ""
         viewBinding.textView.visibility = View.INVISIBLE
-        Thread {
-            while (mIsStreaming) {
-                val elapsedTime: Long = System.currentTimeMillis() - mLastTime
-                if (elapsedTime > mUploadDelay && mUploadDelay != 0L) {   // Bound the image upload based on the user-defined frequency
-                    var byteArray: ByteArray
-                    val bmp = mCameraPreview.bitmap
-                    val bmp2 = Bitmap.createScaledBitmap(bmp!!, mTargetWidth, mTargetHeight, false)
-                    byteArray = ImageConverter.BitmaptoJPEG(bmp2)
-                    mServer.sendImage(byteArray)
-                    mLastTime = System.currentTimeMillis()
+        if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
+            Thread {
+                while (mIsStreaming) {
+                    val elapsedTime: Long = System.currentTimeMillis() - mLastTime
+                    if (elapsedTime > mUploadDelay && mUploadDelay != 0L) {   // Bound the image upload based on the user-defined frequency
+                        var byteArray: ByteArray
+                        val bmp = mCameraPreview.bitmap
+                        val bmpScaled = Bitmap.createScaledBitmap(bmp!!, mTargetWidth, mTargetHeight, false)
+                        val bmpFlipped = bmpScaled.flipHorizontally()
+                        byteArray = ImageConverter.BitmaptoJPEG(bmpFlipped)
+                        mServer.sendImage(byteArray)
+                        mLastTime = System.currentTimeMillis()
+                    }
                 }
-            }
-        }.start()
+            }.start()
+        }
+        else {
+            Thread {
+                while (mIsStreaming) {
+                    val elapsedTime: Long = System.currentTimeMillis() - mLastTime
+                    if (elapsedTime > mUploadDelay && mUploadDelay != 0L) {   // Bound the image upload based on the user-defined frequency
+                        var byteArray: ByteArray
+                        val bmp = mCameraPreview.bitmap
+                        val bmpScaled = Bitmap.createScaledBitmap(bmp!!, mTargetWidth, mTargetHeight, false)
+                        byteArray = ImageConverter.BitmaptoJPEG(bmpScaled)
+                        mServer.sendImage(byteArray)
+                        mLastTime = System.currentTimeMillis()
+                    }
+                }
+            }.start()
+        }
     }
 
     private fun stopStreaming() {
         mIsStreaming = false
         mServer.getPrediction()
+    }
+
+    private fun Bitmap.flipHorizontally(): Bitmap {
+        val matrix = Matrix().apply { postScale(-1f, 1f, width / 2f, height / 2f) }
+        return Bitmap.createBitmap(this, 0, 0, width, height, matrix, true)
     }
 
     override fun onConnected(success: Boolean) {

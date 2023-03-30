@@ -44,7 +44,7 @@ class ChatFragment() : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val imm: InputMethodManager = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-
+        val mainActivity = requireActivity() as MainActivity
         val layoutManager = LinearLayoutManager(requireContext(), RecyclerView.VERTICAL, false)
         binding.chatRV.layoutManager = layoutManager
         mAdapter = ChatRecyclerAdapter(list) { item, pos ->
@@ -54,6 +54,9 @@ class ChatFragment() : Fragment() {
             if(binding.editText.requestFocus()){
                 imm.showSoftInput(binding.editText, InputMethodManager.SHOW_IMPLICIT)
                 binding.editText.setSelection(binding.editText.length())
+                println("scrolling to last msg")
+                scrollToPos(list.size - 1)
+                println("done")
             }
         }
 
@@ -63,18 +66,26 @@ class ChatFragment() : Fragment() {
 
         binding.sendBttn.setOnClickListener{
             setListener()
-            imm.hideSoftInputFromWindow(binding.editText.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
+//            imm.hideSoftInputFromWindow(binding.editText.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
         }
 
+        binding.chatFragment.addOnLayoutChangeListener { v, left, top, right, bottom, leftWas, topWas, rightWas, bottomWas ->
+            val heightWas = bottomWas - topWas // Bottom exclusive, top inclusive
+            if (v.height != heightWas) {
+                scrollToPos(list.size - 1)
+                println("height changed")
+            }
+        }
         binding.editText.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
+            scrollToPos(list.size - 1)
             if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
                 setListener()
                 imm.hideSoftInputFromWindow(binding.editText.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
+                mainActivity.viewBinding.bottomNavBar.visibility = View.VISIBLE
                 return@OnKeyListener true
             }
             false
         })
-
 
         scrollToPos(list.size - 1)
 
