@@ -19,14 +19,14 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.26" />
 
-<!--    <androidx.camera.view.PreviewView-->
-<!--        android:id="@+id/viewFinder2"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"/>-->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/viewFinder2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
     <androidx.viewpager2.widget.ViewPager2
         android:layout_width="match_parent"
@@ -180,7 +180,7 @@
         android:id="@+id/guideMsg"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Tip: Use this outline as a guide to position yourself correctly."
+        android:text="@string/position_tip"
         android:textColor="@color/white_trans"
         android:textSize="@dimen/body_text_size"
         android:textAlignment="center"
@@ -188,7 +188,7 @@
         android:layout_marginHorizontal="70dp"
         app:layout_constraintBottom_toBottomOf="@id/viewFinder"
         app:layout_constraintTop_toTopOf="@+id/viewFinder"
-        app:layout_constraintVertical_bias="0.75"
+        app:layout_constraintVertical_bias="0.7"
         android:visibility="gone"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
