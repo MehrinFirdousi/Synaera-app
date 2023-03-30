@@ -97,6 +97,7 @@ class FilesFragment() : Fragment() {
                 Toast.makeText(context, "No videos selected", Toast.LENGTH_SHORT).show()
             for (pos in mAdapter.selectedValues) {
                 Log.d("FILES", "deleting $pos")
+                db.deleteVideo(list[pos])
                 list.removeAt(pos)
                 mAdapter.notifyItemRemoved(pos)
             }
