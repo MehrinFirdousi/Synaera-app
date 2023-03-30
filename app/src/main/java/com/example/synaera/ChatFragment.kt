@@ -20,6 +20,8 @@ class ChatFragment() : Fragment() {
     private var mAdapter : ChatRecyclerAdapter = ChatRecyclerAdapter(ArrayList()) { _, _ ->}
     private var editing = false
     private var tempPos = 0
+    private var isFirst = true
+    private var keyboardOpen = false
 
     companion object {
         @JvmStatic
@@ -61,9 +63,6 @@ class ChatFragment() : Fragment() {
                 scrollToPos(list.size - 1)
                 println("done")
 
-                viewPagerParams.bottomToTop = ConstraintLayout.LayoutParams.UNSET
-                viewPagerParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-                mainActivity.viewBinding.bottomNavBar.visibility = View.GONE
             }
         }
 
@@ -71,25 +70,29 @@ class ChatFragment() : Fragment() {
 
         scrollToPos(mAdapter.itemCount - 1)
 
-        binding.editText.setOnClickListener{
-            viewPagerParams.bottomToTop = ConstraintLayout.LayoutParams.UNSET
-            viewPagerParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
-            mainActivity.viewBinding.bottomNavBar.visibility = View.GONE
-        }
-
         binding.sendBttn.setOnClickListener{
             setListener()
-            viewPagerParams.bottomToTop = mainActivity.viewBinding.bottomNavBar.id
-            viewPagerParams.bottomToBottom = ConstraintLayout.LayoutParams.UNSET
-            mainActivity.viewBinding.bottomNavBar.visibility = View.VISIBLE
 //            imm.hideSoftInputFromWindow(binding.editText.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
         }
 
         binding.chatFragment.addOnLayoutChangeListener { v, left, top, right, bottom, leftWas, topWas, rightWas, bottomWas ->
             val heightWas = bottomWas - topWas // Bottom exclusive, top inclusive
             if (v.height != heightWas) {
-                scrollToPos(list.size - 1)
-                println("height changed")
+//                if (isFirst) {
+//                    isFirst = false
+//                }
+//                else {
+//                    if (!keyboardOpen) {
+//                        keyboardOpen = true
+//                        mainActivity.viewBinding.bottomNavBar.visibility = View.GONE
+//                    }
+//                    else {
+//                        keyboardOpen = false
+//                        mainActivity.viewBinding.bottomNavBar.visibility = View.VISIBLE
+//                    }
+                    scrollToPos(list.size - 1)
+                    println("height changed")
+//                }
             }
         }
 
@@ -98,14 +101,12 @@ class ChatFragment() : Fragment() {
             if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
                 setListener()
                 imm.hideSoftInputFromWindow(binding.editText.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
-                mainActivity.viewBinding.bottomNavBar.visibility = View.VISIBLE
                 return@OnKeyListener true
             }
             false
         })
 
         scrollToPos(list.size - 1)
-
     }
 
     private fun scrollToPos(pos: Int) {

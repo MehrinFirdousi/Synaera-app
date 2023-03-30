@@ -61,7 +61,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
     private lateinit var mServer: ServerClient
     private lateinit var mCameraPreview: PreviewView
-    private lateinit var mCameraPreview2: PreviewView
+//    private lateinit var mCameraPreview2: PreviewView
 
     // Camera Use-Cases
     private var mPreview : Preview? = null
@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 //        mServer.init("user", "pass", "20.211.25.165", 5000)
         mServer.connect()
 
-        mCameraPreview2 = viewBinding.viewFinder2
+//        mCameraPreview2 = viewBinding.viewFinder2
         mCameraPreview = viewBinding.viewFinder
 
         //Info screen
@@ -137,7 +137,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
         // Request camera permissions
         if (allPermissionsGranted()) {
-            startCameraPreview2()
+//            startCameraPreview2()
             startCameraPreview()
         } else {
             ActivityCompat.requestPermissions(
@@ -213,7 +213,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                 cameraFacing = CameraSelector.LENS_FACING_BACK
             else
                 cameraFacing = CameraSelector.LENS_FACING_FRONT
-            startCameraPreview2()
+//            startCameraPreview2()
             startCameraPreview()
         }
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -475,20 +475,20 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         }, ContextCompat.getMainExecutor(this))
     }
 
-    private fun startCameraPreview2() {
-        Log.d(TAG, "startCameraPreview")
-        val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> =
-            ProcessCameraProvider.getInstance(this)
-        cameraProviderFuture.addListener({
-            try {
-                val cameraProvider = cameraProviderFuture.get()
-                bindPreview2(cameraProvider)
-            } catch (e: ExecutionException) {
-                // do nothing
-            } catch (_: InterruptedException) {
-            }
-        }, ContextCompat.getMainExecutor(this))
-    }
+//    private fun startCameraPreview2() {
+//        Log.d(TAG, "startCameraPreview")
+//        val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> =
+//            ProcessCameraProvider.getInstance(this)
+//        cameraProviderFuture.addListener({
+//            try {
+//                val cameraProvider = cameraProviderFuture.get()
+//                bindPreview2(cameraProvider)
+//            } catch (e: ExecutionException) {
+//                // do nothing
+//            } catch (_: InterruptedException) {
+//            }
+//        }, ContextCompat.getMainExecutor(this))
+//    }
 
     private fun bindPreview(cameraProvider: ProcessCameraProvider) {
         mPreview = Preview.Builder().build()
@@ -504,19 +504,19 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         cameraProvider.bindToLifecycle(this as LifecycleOwner, cameraSelector, mPreview)
     }
 
-    private fun bindPreview2(cameraProvider: ProcessCameraProvider) {
-        mPreview2 = Preview.Builder().build()
-
-        mPreview2!!.setSurfaceProvider(mCameraPreview2.createSurfaceProvider())
-        val cameraSelector: CameraSelector = if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
-            CameraSelector.DEFAULT_FRONT_CAMERA
-        } else {
-            CameraSelector.DEFAULT_BACK_CAMERA
-        }
-        cameraProvider.unbindAll()
-//        val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-        cameraProvider.bindToLifecycle(this as LifecycleOwner, cameraSelector, mPreview2)
-    }
+//    private fun bindPreview2(cameraProvider: ProcessCameraProvider) {
+//        mPreview2 = Preview.Builder().build()
+//
+//        mPreview2!!.setSurfaceProvider(mCameraPreview2.createSurfaceProvider())
+//        val cameraSelector: CameraSelector = if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
+//            CameraSelector.DEFAULT_FRONT_CAMERA
+//        } else {
+//            CameraSelector.DEFAULT_BACK_CAMERA
+//        }
+//        cameraProvider.unbindAll()
+////        val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+//        cameraProvider.bindToLifecycle(this as LifecycleOwner, cameraSelector, mPreview2)
+//    }
 
     private fun startStreaming() {
         mIsStreaming = true
