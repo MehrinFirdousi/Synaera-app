@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -46,6 +47,8 @@ class ChatFragment() : Fragment() {
         val imm: InputMethodManager = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         val mainActivity = requireActivity() as MainActivity
         val layoutManager = LinearLayoutManager(requireContext(), RecyclerView.VERTICAL, false)
+        val viewPagerParams = mainActivity.viewBinding.viewPager.layoutParams as ConstraintLayout.LayoutParams
+
         binding.chatRV.layoutManager = layoutManager
         mAdapter = ChatRecyclerAdapter(list) { item, pos ->
             binding.editText.setText(item.text)
@@ -57,6 +60,10 @@ class ChatFragment() : Fragment() {
                 println("scrolling to last msg")
                 scrollToPos(list.size - 1)
                 println("done")
+
+                viewPagerParams.bottomToTop = ConstraintLayout.LayoutParams.UNSET
+                viewPagerParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+                mainActivity.viewBinding.bottomNavBar.visibility = View.GONE
             }
         }
 
@@ -64,8 +71,17 @@ class ChatFragment() : Fragment() {
 
         scrollToPos(mAdapter.itemCount - 1)
 
+        binding.editText.setOnClickListener{
+            viewPagerParams.bottomToTop = ConstraintLayout.LayoutParams.UNSET
+            viewPagerParams.bottomToBottom = ConstraintLayout.LayoutParams.PARENT_ID
+            mainActivity.viewBinding.bottomNavBar.visibility = View.GONE
+        }
+
         binding.sendBttn.setOnClickListener{
             setListener()
+            viewPagerParams.bottomToTop = mainActivity.viewBinding.bottomNavBar.id
+            viewPagerParams.bottomToBottom = ConstraintLayout.LayoutParams.UNSET
+            mainActivity.viewBinding.bottomNavBar.visibility = View.VISIBLE
 //            imm.hideSoftInputFromWindow(binding.editText.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
         }
 
@@ -76,6 +92,7 @@ class ChatFragment() : Fragment() {
                 println("height changed")
             }
         }
+
         binding.editText.setOnKeyListener(View.OnKeyListener { _, keyCode, event ->
             scrollToPos(list.size - 1)
             if (keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_UP) {
