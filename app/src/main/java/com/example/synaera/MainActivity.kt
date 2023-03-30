@@ -118,6 +118,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         }
 
 
+
         val db = DatabaseHelper(this)
 
         /** sender = true for system, false for user */
