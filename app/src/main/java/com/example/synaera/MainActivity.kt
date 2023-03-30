@@ -61,12 +61,11 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
     private lateinit var mServer: ServerClient
     private lateinit var mCameraPreview: PreviewView
-//    private lateinit var mCameraPreview2: PreviewView
+    private lateinit var mCameraPreview2: PreviewView
 
     // Camera Use-Cases
     private var mPreview : Preview? = null
-//    private var mPreview2 : Preview? = null
-    private var mImageAnalysis: ImageAnalysis? = null
+    private var mPreview2 : Preview? = null
 
     private val mTargetWidth = 640
     private val mTargetHeight = 480
@@ -96,12 +95,12 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         setContentView(viewBinding.root)
 
         mServer = ServerClient.getInstance()
-        mServer.init("user", "pass", "192.168.1.41", 5000)
-//        mServer.init("user", "pass", "20.193.159.90", 5000)
+//        mServer.init("user", "pass", "192.168.1.41", 5000)
+        mServer.init("user", "pass", "20.193.159.90", 5000)
 //        mServer.init("user", "pass", "20.211.25.165", 5000)
         mServer.connect()
 
-//        mCameraPreview2 = viewBinding.viewFinder2
+        mCameraPreview2 = viewBinding.viewFinder2
         mCameraPreview = viewBinding.viewFinder
 
         //Info screen
@@ -138,9 +137,8 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 
         // Request camera permissions
         if (allPermissionsGranted()) {
-//            startCameraPreview2()
+            startCameraPreview2()
             startCameraPreview()
-//            setThumbnailRecentVideo()
         } else {
             ActivityCompat.requestPermissions(
                 this, REQUIRED_PERMISSIONS, REQUEST_CODE_PERMISSIONS)
@@ -215,7 +213,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
                 cameraFacing = CameraSelector.LENS_FACING_BACK
             else
                 cameraFacing = CameraSelector.LENS_FACING_FRONT
-//            startCameraPreview2()
+            startCameraPreview2()
             startCameraPreview()
         }
         cameraExecutor = Executors.newSingleThreadExecutor()
@@ -310,96 +308,10 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         val density: Float = resources.displayMetrics.density
         return (dp.toFloat() * density).roundToInt()
     }
-    fun convertVideoToBytes(uri: Uri?): ByteArray? {
-        var videoBytes: ByteArray? = null
-        try {
-            val baos = ByteArrayOutputStream()
-            val fis = FileInputStream(File(uri.toString()))
-            val buf = ByteArray(1024)
-            var n: Int
-            while (-1 != fis.read(buf).also { n = it }) baos.write(buf, 0, n)
-            videoBytes = baos.toByteArray()
-        } catch (e: FileNotFoundException) {
-            e.printStackTrace()
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-        return videoBytes
-    }
-
-    private fun getFrames(uri: Uri?) : ArrayList<Bitmap> {
-//        val bitmap = retriever.getFrameAtTime(timeUs, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
-
-        val retriever = MediaMetadataRetriever()
-        if (uri != null) {
-            val uriStr = uri.toString()
-            Log.d(TAG, "uri = $uriStr")
-            retriever.setDataSource(this, uri)
-        }
-
-        val timeInterval = 150L // extract frame every 1 second
-//        val timeUs = 1000000L // Time in microseconds
-        val duration = retriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION)?.toLong() ?: 0
-        val frames = ArrayList<Bitmap>()
-
-        for (time in 0L..duration step timeInterval) {
-            val frame = retriever.getFrameAtTime(time * 1000L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
-            val bitmap = frame?.let { Bitmap.createBitmap(it) }
-            if (bitmap != null) {
-                frames.add(bitmap)
-            }
-        }
-        return frames
-    }
-
-    private fun setThumbnailRecentVideo() {
-        /*
-        val projection = arrayOf(MediaStore.Video.Media._ID)
-
-        val uri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
-        val path = URIPathHelper().getPath(this, uri).toString()
-        Log.d(TAG, "uripath is $path")
-        val cursor = this.contentResolver.query(
-            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            "1000000063",
-            null,
-            "${MediaStore.Video.Media.DATE_TAKEN} DESC"
-        )
-
-        if (cursor != null && cursor.moveToFirst()) {
-            val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID))
-            val thumbnail = MediaStore.Video.Thumbnails.getThumbnail(
-                this.contentResolver,
-                id,
-                MediaStore.Video.Thumbnails.MINI_KIND,
-                null
-            )
-            cursor.close()
-            viewBinding.openGalleryButton.setImageBitmap(thumbnail)
-            Log.d(TAG, "set new image!!!")
-            // use the thumbnail here
-        }
-        else {
-            Log.d(TAG, "could not set thumbnail :(")
-            if (cursor == null)
-                Log.d(TAG, "could not set thumbnail, cursor is null")
-            else if (!cursor.moveToFirst())
-                Log.d(TAG, "could not set thumbnail, cursor cannot move to first")
-        }*/
-    }
 
     private fun setViewPagerListener() {
         viewBinding.viewPager.registerOnPageChangeCallback(object: ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
-//                viewBinding.bottomNavBar.selectedItemId = when(position) {
-//                    0 ->  R.id.home_menu_id
-//                    1 ->  R.id.gallery_menu_id
-//                    2 ->  R.id.camera_menu_id
-//                    3 ->  R.id.chat_menu_id
-//                    4 ->  R.id.profile_menu_id
-//                    else -> R.id.camera_menu_id
-//                }
                 when(position) {
                     0 -> {
                         viewBinding.viewPager.currentItem = 0
@@ -563,20 +475,20 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         }, ContextCompat.getMainExecutor(this))
     }
 
-//    private fun startCameraPreview2() {
-//        Log.d(TAG, "startCameraPreview")
-//        val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> =
-//            ProcessCameraProvider.getInstance(this)
-//        cameraProviderFuture.addListener({
-//            try {
-//                val cameraProvider = cameraProviderFuture.get()
-//                bindPreview2(cameraProvider)
-//            } catch (e: ExecutionException) {
-//                // do nothing
-//            } catch (_: InterruptedException) {
-//            }
-//        }, ContextCompat.getMainExecutor(this))
-//    }
+    private fun startCameraPreview2() {
+        Log.d(TAG, "startCameraPreview")
+        val cameraProviderFuture: ListenableFuture<ProcessCameraProvider> =
+            ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
+            try {
+                val cameraProvider = cameraProviderFuture.get()
+                bindPreview2(cameraProvider)
+            } catch (e: ExecutionException) {
+                // do nothing
+            } catch (_: InterruptedException) {
+            }
+        }, ContextCompat.getMainExecutor(this))
+    }
 
     private fun bindPreview(cameraProvider: ProcessCameraProvider) {
         mPreview = Preview.Builder().build()
@@ -592,19 +504,19 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         cameraProvider.bindToLifecycle(this as LifecycleOwner, cameraSelector, mPreview)
     }
 
-//    private fun bindPreview2(cameraProvider: ProcessCameraProvider) {
-//        mPreview2 = Preview.Builder().build()
-//
-//        mPreview2!!.setSurfaceProvider(mCameraPreview2.createSurfaceProvider())
-//        val cameraSelector: CameraSelector = if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
-//            CameraSelector.DEFAULT_FRONT_CAMERA
-//        } else {
-//            CameraSelector.DEFAULT_BACK_CAMERA
-//        }
-//        cameraProvider.unbindAll()
-////        val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
-//        cameraProvider.bindToLifecycle(this as LifecycleOwner, cameraSelector, mPreview2)
-//    }
+    private fun bindPreview2(cameraProvider: ProcessCameraProvider) {
+        mPreview2 = Preview.Builder().build()
+
+        mPreview2!!.setSurfaceProvider(mCameraPreview2.createSurfaceProvider())
+        val cameraSelector: CameraSelector = if (cameraFacing == CameraSelector.LENS_FACING_FRONT) {
+            CameraSelector.DEFAULT_FRONT_CAMERA
+        } else {
+            CameraSelector.DEFAULT_BACK_CAMERA
+        }
+        cameraProvider.unbindAll()
+//        val cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+        cameraProvider.bindToLifecycle(this as LifecycleOwner, cameraSelector, mPreview2)
+    }
 
     private fun startStreaming() {
         mIsStreaming = true
