@@ -20,6 +20,12 @@ class OnboardingActivity : AppCompatActivity() {
 
         binding = ActivityOnboardingBinding.inflate(layoutInflater)
 
+        if (!SharedPref.getInstance(applicationContext).isFirstLaunch()) {
+            val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+
         setContentView(binding.root)
 
         binding.backbtn.setOnClickListener {
@@ -30,17 +36,19 @@ class OnboardingActivity : AppCompatActivity() {
 
         binding.nextbtn.setOnClickListener{
 
-                if (getitem(0) < 2) binding.slideViewPager.setCurrentItem(getitem(1), true) else {
-                    val i = Intent(this, LoginActivity::class.java)
-                    startActivity(i)
-                    finish()
-                }
-
-        }
-        binding.skipButton.setOnClickListener {
+            if (getitem(0) < 2) binding.slideViewPager.setCurrentItem(getitem(1), true) else {
+                SharedPref.getInstance(applicationContext).setIsFirstLaunchToFalse()
                 val i = Intent(this, LoginActivity::class.java)
                 startActivity(i)
                 finish()
+            }
+
+        }
+        binding.skipButton.setOnClickListener {
+            SharedPref.getInstance(applicationContext).setIsFirstLaunchToFalse()
+            val i = Intent(this, LoginActivity::class.java)
+            startActivity(i)
+            finish()
         }
 
         val list = ArrayList<OnboardingItem>()
