@@ -95,9 +95,7 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
         setContentView(viewBinding.root)
 
         mServer = ServerClient.getInstance()
-//        mServer.init("user", "pass", "192.168.1.41", 5000)
         mServer.init("user", "pass", "20.193.159.90", 5000)
-//        mServer.init("user", "pass", "20.211.25.165", 5000)
         mServer.connect()
 
 //        mCameraPreview2 = viewBinding.viewFinder2
@@ -116,8 +114,6 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
             viewBinding.guideMsg.visibility = View.GONE
         }
 
-
-
         val db = DatabaseHelper(this)
 
         /** sender = true for system, false for user */
@@ -128,10 +124,8 @@ class MainActivity : AppCompatActivity(), ServerResultCallback, IVideoFrameExtra
 //        videoList.add(VideoItem("Video1", "Processing...", getDummyBitmap(100,100,123) ,"123", false))
 //        videoList.add(VideoItem("Video2", "View Transcript", getDummyBitmap(120,120,50) ,"123", false))
 
-        videoList = db.getAllVideos()
-
         chatFragment = ChatFragment.newInstance(chatList)
-        filesFragment = FilesFragment.newInstance(videoList, db)
+        filesFragment = FilesFragment.newInstance(videoList)
         homeFragment = HomeFragment.newInstance(db)
         tts = TextToSpeech(this, this)
 
